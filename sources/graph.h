@@ -1,7 +1,7 @@
 #ifndef  __GRAPH_H_INCLUDED
 #define  __GRAPH_H_INCLUDED
 
-//#define MESSAGE
+//some change here
 
 #define FORWARD 0
 #define REVERSE 1

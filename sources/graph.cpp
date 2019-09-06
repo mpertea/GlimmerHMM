@@ -2,7 +2,7 @@
 
 // GlimmerHMM
 
-//#define MESSAGE
+//some other change here
 
 #include  "delcher.h"
 #include  "gene.h"
