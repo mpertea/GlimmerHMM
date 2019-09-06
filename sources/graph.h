@@ -15,11 +15,11 @@ enum state {INTERG,I0PLUS,I1PLUS,I2PLUS,I0MINUS,I1MINUS,I2MINUS,ESGLPLUS,EINPLUS
 
 struct Site
 {
-  double *score;
-  struct exon **prevex;
-  int *prevstatetype;
-  long int *prevstateno;
-  int *prevpredno;
+  double *score; // maximum score computed for this site
+  struct exon **prevex; // previous coding exon from this site
+  int *prevstatetype; // previous state type (from enum state)
+  long int *prevstateno; 
+  int *prevpredno; 
 };
 
 struct exon

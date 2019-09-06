@@ -30,7 +30,7 @@ char *outfile=NULL;
 int ese=1;
 int gff=0;
 int PREDNO=1;
-int force=0;  // force no partial genes
+int force=0;  // force no partial genes -> default print partial genes
 
 int main  (int argc, char * argv [])
 {
@@ -45,7 +45,7 @@ int main  (int argc, char * argv [])
   int start,stop;
   int *offgene;
   int i;
-  int predno;
+  int predno; // retain top gene predictions -> default equal to 1
 
   // ---------------------------- OPTIONS ------------------------------
 
@@ -74,8 +74,8 @@ int main  (int argc, char * argv [])
   // --------------------------- READ DATA ------------------------------
 
   fp = File_Open (argv [1], "r");
-
-  len=datalen(fp,Name1);
+  
+  len=datalen(fp,Name1); // read genome name length from genome file
 
   if(len<INIT_SIZE) Input_Size=len+2;
   else Input_Size=INIT_SIZE+2;
@@ -102,7 +102,7 @@ int main  (int argc, char * argv [])
 
   while(proclen<len) {
 
-    Data1_Len = LoadData(fp,Data1,INIT_SIZE,goback)-1;
+    Data1_Len = LoadData(fp,Data1,INIT_SIZE,goback)-1; // process sequence in batches in order to not overload memory
 
     if(!start) offset=proclen-OVLP_SIZE/2;
     else offset=0;
@@ -222,20 +222,20 @@ long int printgenes(Site **Sites, long int ssno,int start, int stop, int ignore,
   }
 
   for(i=0;i<PREDNO;i++) {
-    maxscore[i]=Sites[INTERG][ssno-1].score[i];
+    maxscore[i]=Sites[INTERG][ssno-1].score[i]; // start at maxscore for predno i in ssno in an interg site; if no partial genes allowed this is where I should end
     maxval[i]=INTERG;
     maxi[i]=i;
   }
 
-  if(!force) {
-    for(val=I0PLUS; val<=I2MINUS; val++) {
+  if(!force) { // if partial gene structures are allowed, see if I can find a different ending state higher scored than the intergenic one
+    for(val=I0PLUS; val<=I2MINUS; val++) { // for all intronic states
       i=0;
       ret=1;
       j=0;
       while(i<PREDNO && ret) {
-	while(j<PREDNO && Sites[val][ssno-1].score[i]<=maxscore[j]) { j++;}
-	if(j==PREDNO) ret=0;
-	else {
+	while(j<PREDNO && Sites[val][ssno-1].score[i]<=maxscore[j]) { j++;} // if an intron ending state is lower in score -> skip it
+	if(j==PREDNO) ret=0; // no higher scoring state found -> stop the while
+	else { // j scores higher than previous scoring one in i
 	  for(k=PREDNO-1;k>=j+1;k--) {
 	    maxscore[k]=maxscore[k-1];
 	    maxval[k]=maxval[k-1];
@@ -444,6 +444,14 @@ long int printgenes(Site **Sites, long int ssno,int start, int stop, int ignore,
 
 }
 
+void dbg_dequote(char* &p) {
+   int alen=strlen(p);
+   if (alen>1 && p[0]=='\'' && p[alen-1]=='\'') {
+	 p++;
+	 p[alen-2 ]='\0';
+   }
+}
+
 void  Process_Options  (int argc, char * argv [])
 
 //  Process command-line options and set corresponding global switches
@@ -451,6 +459,12 @@ void  Process_Options  (int argc, char * argv [])
 //
 {
    int  i, start=0;
+   // silly patch for annnoying MacOS gdb/eclipse issues:
+   #if defined(__APPLE__) && defined(DEBUG)
+     for (int i=0;i<argc;i++) {
+	   dbg_dequote(argv[i]);
+     }
+   #endif
 
    if(strcmp(argv[1],"-h")==0) {
      fprintf (stderr,"USAGE:  %s <genome1-file> <training-dir-for-genome1> [options] \n",argv [0]);

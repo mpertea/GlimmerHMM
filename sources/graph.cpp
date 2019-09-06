@@ -16,7 +16,7 @@
 
 const int NSTATES = 19; // total number of states
 const int NCSTATES = 7; // number of nocoding states
-const int MODEL_NO=1;  // this was supposed to allow different models for being used during processing of file; this apply to coding sensor, not to signal sensors
+const int MODEL_NO=1;  // this was supposed to allow different models for being used during processing of file; this applies to coding sensor, not to signal sensors
 int  MODEL_LEN[MODEL_NO];
 
 #include  "context.h"
@@ -235,6 +235,7 @@ Site **graph ( char *PData,long int PData_Len,char *TRAIN_DIR, long int *splices
   Stop_Thr = NO_SCORE;
   Use_Exon_Count = FALSE; // default
 
+  // compute CG percentage of the sequence
   cgperc=0;
   acgt=0;
 
@@ -262,6 +263,7 @@ Site **graph ( char *PData,long int PData_Len,char *TRAIN_DIR, long int *splices
   //         read config_file
   // ----------------------------------
 
+  // configuration file depends on CG percentage
   strcpy(File_Name,TRAIN_DIR);
   strcat(File_Name,"config.file");
   fp = fopen (File_Name, "r");
@@ -280,14 +282,14 @@ Site **graph ( char *PData,long int PData_Len,char *TRAIN_DIR, long int *splices
 
     if(!readval) { multiple=1;}
     else {
-      if(!multiple) {
-	if(cgperc<=readval) {
-	  strcpy(CONFIG_FILE[0],File_Name);
-	  if(strcmp(Param,"")) {
-	    TRAIN_DIR=(char *) realloc(TRAIN_DIR,(strlen(TRAIN_DIR)+strlen(Param)+1)*sizeof(char));
-	    strcat(TRAIN_DIR,Param);
-	    strcat(TRAIN_DIR,"/");
-	  }
+      if(!multiple) { // this is default mode for training files -> only one model (MODEL_NO=1)
+    	  if(cgperc<=readval) {
+    		  strcpy(CONFIG_FILE[0],File_Name);
+    		  if(strcmp(Param,"")) {
+    			  TRAIN_DIR=(char *) realloc(TRAIN_DIR,(strlen(TRAIN_DIR)+strlen(Param)+1)*sizeof(char));
+    			  strcat(TRAIN_DIR,Param);
+    			  strcat(TRAIN_DIR,"/");
+    		  }
 
 	  break;
 	}
