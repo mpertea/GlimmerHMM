@@ -24,7 +24,7 @@
 enum base {a, c, g, t};
 
 
-
+// next structure is used to store an ICM model
 typedef struct Model
 {
   int mut_info_pos;
@@ -190,7 +190,7 @@ Read_Scoring_Model (FILE *fptr,int m)
   */
 
   MODEL[ModelNo] = (tModel **) Safe_malloc (sizeof (tModel *) * 3);
-  for (i = 0; i < 3; i++)
+  for (i = 0; i < 3; i++) // 3 ICMs, one for each codon position
     MODEL[ModelNo][i] = (tModel *) Safe_calloc (TOTAL_NODES, sizeof (tModel)); 
 
   

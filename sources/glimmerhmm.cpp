@@ -27,7 +27,7 @@ char *TRAIN_DIR;
 char *proteindom_file=NULL;
 char *outfile=NULL;
 
-int ese=1;
+int ese=1; // not common to have parameters for ExonSplicingEnhancers
 int gff=0;
 int PREDNO=1;
 int force=0;  // force no partial genes -> default print partial genes
@@ -75,10 +75,10 @@ int main  (int argc, char * argv [])
 
   fp = File_Open (argv [1], "r");
   
-  len=datalen(fp,Name1); // read genome name length from genome file
+  len=datalen(fp,Name1); // read genome name in Name1 and fasta sequence length from genome file
 
   if(len<INIT_SIZE) Input_Size=len+2;
-  else Input_Size=INIT_SIZE+2;
+  else Input_Size=INIT_SIZE+2; // process sequence in batches of at most INPUT_SIZE+2
 
   Data1 = (char *) malloc(Input_Size*sizeof(char));
   if(Data1 == NULL ) {
@@ -86,7 +86,7 @@ int main  (int argc, char * argv [])
       exit (0);
   }
 
-  Data1[0]='n';
+  Data1[0]='n'; // I wanted to use the position numbers in the sequence from 1 to n instead of 0 to n-1
 
 
   start=1;
@@ -98,20 +98,20 @@ int main  (int argc, char * argv [])
     fprintf(stderr,"ERROR: Unable to alloc memory for number of genes\n");
     exit(0);
   }
-  for(i=0;i<PREDNO;i++) offgene[i]=1;
+  for(i=0;i<PREDNO;i++) offgene[i]=1; // the next number of a gene from prediction i (for printing purposes)
 
-  while(proclen<len) {
+  while(proclen<len) { // len is the length of the whole fasta sequence, while proclen represents the length of the total processed sequence so far
 
-    Data1_Len = LoadData(fp,Data1,INIT_SIZE,goback)-1; // process sequence in batches in order to not overload memory
+    Data1_Len = LoadData(fp,Data1,INIT_SIZE,goback)-1; // process sequence in batches in order to not overload memory, Data1 is the fasta sequence to process at this time
 
-    if(!start) offset=proclen-OVLP_SIZE/2;
+    if(!start) offset=proclen-OVLP_SIZE/2; // for the batches after the first one, I allow some overlap among the sequences
     else offset=0;
 
     // run graph file
     /*if(PREDNO==1) { predno=2;} // this here might be useful when using intron distribution; but you need to remember it when freeing the memory for Sites
       else*/
     predno=PREDNO;
-    Sites=graph(Data1,Data1_Len,TRAIN_DIR,&ssno,proteindom_file,offset,ese,Name1,predno,force);
+    Sites=graph(Data1,Data1_Len,TRAIN_DIR,&ssno,proteindom_file,offset,ese,Name1,predno,force); // GHMM actual implementation is in function graph
 
     // print data
     stop = proclen+Data1_Len<len ? 0 : 1;
@@ -233,20 +233,20 @@ long int printgenes(Site **Sites, long int ssno,int start, int stop, int ignore,
       ret=1;
       j=0;
       while(i<PREDNO && ret) {
-	while(j<PREDNO && Sites[val][ssno-1].score[i]<=maxscore[j]) { j++;} // if an intron ending state is lower in score -> skip it
-	if(j==PREDNO) ret=0; // no higher scoring state found -> stop the while
-	else { // j scores higher than previous scoring one in i
-	  for(k=PREDNO-1;k>=j+1;k--) {
-	    maxscore[k]=maxscore[k-1];
-	    maxval[k]=maxval[k-1];
-	    maxi[k]=maxi[k-1];
-	  }
-	  maxscore[j]=Sites[val][ssno-1].score[i];
-	  maxval[j]=val;
-	  maxi[j]=i;
-	  i++;
-	  j++;
-	}
+    	  while(j<PREDNO && Sites[val][ssno-1].score[i]<=maxscore[j]) { j++;} // if an intron ending state is lower in score -> skip it
+    	  if(j==PREDNO) ret=0; // no higher scoring state found -> stop the while
+    	  else { // j scores higher than previous scoring one in i
+    		  for(k=PREDNO-1;k>=j+1;k--) {
+    			  maxscore[k]=maxscore[k-1];
+    			  maxval[k]=maxval[k-1];
+    			  maxi[k]=maxi[k-1];
+    		  }
+    		  maxscore[j]=Sites[val][ssno-1].score[i];
+    		  maxval[j]=val;
+    		  maxi[j]=i;
+    		  i++;
+    		  j++;
+    	  }
       }
     }
   }

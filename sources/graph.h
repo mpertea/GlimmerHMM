@@ -18,8 +18,8 @@ struct Site
   double *score; // maximum score computed for this site
   struct exon **prevex; // previous coding exon from this site
   int *prevstatetype; // previous state type (from enum state)
-  long int *prevstateno; 
-  int *prevpredno; 
+  long int *prevstateno; // previous state number in trellis (it's the prvious splice sites, but basically gives the position on the sequence)
+  int *prevpredno; // if predno is 1 (only one prediction to consider) this is always 0; otherwise is which n-th scoring prediction this links to
 };
 
 struct exon
