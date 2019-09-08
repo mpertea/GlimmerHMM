@@ -22,10 +22,10 @@ const int  MAX_LINE = 300;
 #define  ATG_LEN  19                    /* Positions +0,18 in a19 */
 #define  ATG_SIGNAL_OFFSET  12          /* Start of  ATG  */
 #define  ATG_FILE_NAME "atg.markov"
-#define  ATG_THRESHOLD -4.44 
+#define  ATG_THRESHOLD -4.44
 
-#define  MARKOV_DEGREE  1
-#define  MARKOV_LEN  4                     /* ALPHABET_SIZE ^ MARKOV_DEGREE */
+#define  MARKOV_DEGREE  2
+#define  MARKOV_LEN  16                     /* ALPHABET_SIZE ^ MARKOV_DEGREE */
 #define  LOW_SCORE  -99.0  /* Score if pattern does not have GT or AG signal */
 #define  RETURN_TRUE_PROB  0
 
@@ -60,15 +60,14 @@ int MESSG;
 
 int Start_Pos, Stop_Pos;
 
-#define NO_OF_VAR 2 	/* number of variables for the decision trees */
-#define NO_OF_TREES 10     /* number of decision trees  
+#define NO_OF_VAR 2 	// number of variables for the decision trees
+#define NO_OF_TREES 10     // number of decision trees
 
-/* this file contains freq's of all in-frame hexamers in all
-   training sequences. */
+// this file contains freq's of all in-frame hexamers in all training sequences.
 #define IF_6MER_TRAIN        "exon.hexfreq"
 
-/* this file contains the freq's of all hexamers in all training
-   sequences, including exons, introns, and intergenic DNA */
+// this file contains the freq's of all hexamers in all training
+//   sequences, including exons, introns, and intergenic DNA
 #define TRAIN_6MERS          "all.hexfreq"
 
 int no_of_trees = NO_OF_TREES;
@@ -86,7 +85,7 @@ int *basetoint(char sequence[], long length);
 int comp(const void *a, const void *b);
 
 int main ( int argc, char * argv [])
-{ 
+{
    FILE  * Infile, *Outfile;
    char  S [MAX_STRING_LEN], T [MAX_STRING_LEN], Name[MAX_STRING_LEN];
    int *B;
@@ -103,7 +102,7 @@ int main ( int argc, char * argv [])
         fprintf (stderr, "USAGE:  %s <InpFile> <InpFaFile> <OutFile> <NUM_POSITIONS> [<MESSG>]\n",
                     argv [0]);
         exit (EXIT_FAILURE);
-       }   
+       }
 
    NUM_POSITIONS=atoi(argv[4]);
    if(argc==6) MESSG=atoi(argv[5]);
@@ -147,7 +146,7 @@ int main ( int argc, char * argv [])
       }
 
       free(B);
-    }  
+    }
 
    fclose(Infile);
 
@@ -168,7 +167,7 @@ int main ( int argc, char * argv [])
 
 
    /* dealing with false starts */
-       
+
    Infile = fopen (argv [2], "r");
    if  (Infile == NULL)
        {
@@ -189,14 +188,14 @@ int main ( int argc, char * argv [])
        strncpy (T, S + Start_Pos, String_Len);
        T [String_Len] = '\0';
        B = basetoint(T,String_Len);
-       
+
        Is_Atg(B,&score);
        Score[N++]=score;
 
        if(MESSG) {
 	 printf("%s %ld %.6f\n",Name,Poz,score);
        }
-       
+
        free(B);
      }
 
@@ -213,24 +212,24 @@ int main ( int argc, char * argv [])
    fclose(Outfile);
 
 }
-    
+
 
 
 int comp(const void *a, const void *b)
-{ 
+{
   if(*(double *)a > *(double *)b) return(1);
   else if (*(double *)a==*(double *)b) return(0);
   else return(-1);
 
-}  
-  
+}
+
 
 /* convert the acgt sequence into a sequence of 0123 -- integers */
 int *basetoint(char sequence[], long length)
 {
   int *intarray;
   long i;
-  
+
   intarray = (int *) malloc((length+1)*sizeof(int));
   MemCheck(intarray,"intarray");
 
@@ -660,7 +659,7 @@ int  Is_Atg  (const int * S, double * Return_Score)
                Ct = fscanf (Infile, "%f", & Positive_Table [i] [j] [k]);
                if  (Ct != 1)
                    {
-                    fprintf (stderr, "ERROR reading atg file \"%s\"\n", 
+                    fprintf (stderr, "ERROR reading atg file \"%s\"\n",
                                 ATG_FILE_NAME);
                     exit (EXIT_FAILURE);
                    }
@@ -673,7 +672,7 @@ int  Is_Atg  (const int * S, double * Return_Score)
                Ct = fscanf (Infile, "%f", & Negative_Table [i] [j] [k]);
                if  (Ct != 1)
                    {
-                    fprintf (stderr, "ERROR reading atg file \"%s\"\n", 
+                    fprintf (stderr, "ERROR reading atg file \"%s\"\n",
                                 ATG_FILE_NAME);
                     exit (EXIT_FAILURE);
                    }

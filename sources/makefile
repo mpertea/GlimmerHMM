@@ -9,9 +9,9 @@ CXXFLAGS := $(if $(CXXFLAGS),$(BASEFLAGS) $(CXXFLAGS),$(BASEFLAGS))
 LIBS := -lm
 
 ifneq (,$(filter %release, $(MAKECMDGOALS)))
-  CXXFLAGS := -O2 -DNDEBUG $(CXXFLAGS)
+  CXXFLAGS := -O3 -g -DNDEBUG $(CXXFLAGS)
 else # debug build
-  CXXFLAGS += -g -O0 -DDEBUG -D_DEBUG -DGDEBUG -std=c++0x
+  CXXFLAGS += -g -O0 -D_DEBUG -DGDEBUG
 endif
 
 %.o : %.cpp

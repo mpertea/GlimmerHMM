@@ -19,13 +19,13 @@ const int  MAX_LINE = 300;
 #define  FALSE  0
 #define  ALPHABET_SIZE  4
 
-#define  STOP_LEN  19                    /* Positions +0,18 in a19 */
-#define  STOP_SIGNAL_OFFSET  4          /* Start of  STOP  */
-#define  STOP_FILE_NAME "stop.markov"
-#define  STOP_THRESHOLD -4.44 
+#define  ATG_LEN  19                    /* Positions +0,18 in a19 */
+#define  ATG_SIGNAL_OFFSET  12          /* Start of  ATG  */
+#define  ATG_FILE_NAME "atg.markov"
+#define  ATG_THRESHOLD -4.44
 
-#define  MARKOV_DEGREE  2
-#define  MARKOV_LEN  16                     /* ALPHABET_SIZE ^ MARKOV_DEGREE */
+#define  MARKOV_DEGREE  1
+#define  MARKOV_LEN  4                     /* ALPHABET_SIZE ^ MARKOV_DEGREE */
 #define  LOW_SCORE  -99.0  /* Score if pattern does not have GT or AG signal */
 #define  RETURN_TRUE_PROB  0
 
@@ -55,20 +55,19 @@ typedef struct tree {
 
 const int  MAX_STRING_LEN = 400;
 int  NUM_POSITIONS;
-int MESSG;
 int CODING_LEN;
+int MESSG;
 
 int Start_Pos, Stop_Pos;
 
-#define NO_OF_VAR 2 	/* number of variables for the decision trees */
-#define NO_OF_TREES 10     /* number of decision trees  
+#define NO_OF_VAR 2 	// number of variables for the decision trees */
+#define NO_OF_TREES 10     // number of decision trees
 
-/* this file contains freq's of all in-frame hexamers in all
-   training sequences. */
+// this file contains freq's of all in-frame hexamers in all training sequences.
 #define IF_6MER_TRAIN        "exon.hexfreq"
 
-/* this file contains the freq's of all hexamers in all training
-   sequences, including exons, introns, and intergenic DNA */
+// this file contains the freq's of all hexamers in all training
+//  sequences, including exons, introns, and intergenic DNA
 #define TRAIN_6MERS          "all.hexfreq"
 
 int no_of_trees = NO_OF_TREES;
@@ -80,13 +79,13 @@ struct tree_node **nagroots=NULL;
 struct tree_node **agcroots=NULL;
 char TRAIN_DIR[500]="";
 
-int  Is_Stop  (const int * , double *);
+int  Is_Atg  (const int * , double *);
 
 int *basetoint(char sequence[], long length);
 int comp(const void *a, const void *b);
 
 int main ( int argc, char * argv [])
-{ 
+{
    FILE  * Infile, *Outfile;
    char  S [MAX_STRING_LEN], T [MAX_STRING_LEN], Name[MAX_STRING_LEN];
    int *B;
@@ -94,6 +93,7 @@ int main ( int argc, char * argv [])
    long String_Len, Poz;
    double Score[1000000];
    double score;
+   char line[2000];
    double *rv;
 
 
@@ -102,7 +102,7 @@ int main ( int argc, char * argv [])
         fprintf (stderr, "USAGE:  %s <InpFile> <InpFaFile> <OutFile> <NUM_POSITIONS> [<MESSG>]\n",
                     argv [0]);
         exit (EXIT_FAILURE);
-       }   
+       }
 
    NUM_POSITIONS=atoi(argv[4]);
    if(argc==6) MESSG=atoi(argv[5]);
@@ -113,7 +113,7 @@ int main ( int argc, char * argv [])
 
 
 
-   /* dealing with true stops */
+   /* dealing with true starts */
 
    String_Len = 1 + Stop_Pos - Start_Pos;
 
@@ -125,9 +125,8 @@ int main ( int argc, char * argv [])
        }
 
    if(MESSG) {
-     printf("Scores for true stops\n");
+     printf("Scores for true starts\n");
    }
-
 
    N = 0;
    while  (fgets (T, MAX_STRING_LEN, Infile) != NULL)
@@ -139,15 +138,15 @@ int main ( int argc, char * argv [])
       T [String_Len] = '\0';
       B = basetoint(T,String_Len);
 
-      Is_Stop(B,&score);
+      Is_Atg(B,&score);
       Score[N++]=score;
 
       if(MESSG) {
-	printf("%s %ld %.6f\n",Name,Poz,score);
+	      printf("%s %ld %.6f\n",Name,Poz,score);
       }
 
       free(B);
-    }  
+    }
 
    fclose(Infile);
 
@@ -160,15 +159,15 @@ int main ( int argc, char * argv [])
         exit (EXIT_FAILURE);
        }
 
-   fprintf(Outfile,"Scores for true stops\n");
+   fprintf(Outfile,"Scores for true starts\n");
 
    for(i=0;i<N;i++){
      fprintf(Outfile, " %.6f\n", Score[i]);
      }
 
 
-   /* dealing with false acceptors */
-       
+   /* dealing with false starts */
+
    Infile = fopen (argv [2], "r");
    if  (Infile == NULL)
        {
@@ -177,7 +176,7 @@ int main ( int argc, char * argv [])
        }
 
    if(MESSG) {
-     printf("Scores for false stops\n");
+     printf("Scores for false starts\n");
    }
 
    N = 0;
@@ -189,14 +188,14 @@ int main ( int argc, char * argv [])
        strncpy (T, S + Start_Pos, String_Len);
        T [String_Len] = '\0';
        B = basetoint(T,String_Len);
-       
-       Is_Stop(B,&score);
+
+       Is_Atg(B,&score);
        Score[N++]=score;
 
        if(MESSG) {
 	 printf("%s %ld %.6f\n",Name,Poz,score);
        }
-       
+
        free(B);
      }
 
@@ -204,7 +203,7 @@ int main ( int argc, char * argv [])
 
    qsort(Score, N, sizeof(double), comp);
 
-   fprintf(Outfile,"Scores for false stops\n");
+   fprintf(Outfile,"Scores for false starts\n");
 
    for(i=0;i<N;i++){
      fprintf(Outfile, " %.6f\n", Score[i]);
@@ -213,24 +212,24 @@ int main ( int argc, char * argv [])
    fclose(Outfile);
 
 }
-    
+
 
 
 int comp(const void *a, const void *b)
-{ 
+{
   if(*(double *)a > *(double *)b) return(1);
   else if (*(double *)a==*(double *)b) return(0);
   else return(-1);
 
-}  
-  
+}
+
 
 /* convert the acgt sequence into a sequence of 0123 -- integers */
 int *basetoint(char sequence[], long length)
 {
   int *intarray;
   long i;
-  
+
   intarray = (int *) malloc((length+1)*sizeof(int));
   MemCheck(intarray,"intarray");
 
@@ -627,17 +626,17 @@ int  Read_Multi_String  (FILE * fp, char * & T, long int & Size, char Name [],
 
 
 
-int  Is_Stop  (const int * S, double * Return_Score)
+int  Is_Atg  (const int * S, double * Return_Score)
 
-/* Evaluate string  S [0 .. (STOP_LEN -1)] and
-*  return  TRUE  or  FALSE  as to whether it is a likely stop
-*  site.  Also set  Return_Score  to the probability that it is an stop
+/* Evaluate string  S [0 .. (ATG_LEN -1)] and
+*  return  TRUE  or  FALSE  as to whether it is a likely atg
+*  site.  Also set  Return_Score  to the probability that it is an atg
 *  site. */
 
 {
    FILE  * Infile;
-   static float  Positive_Table [STOP_LEN] [ALPHABET_SIZE] [MARKOV_LEN];
-   static float  Negative_Table [STOP_LEN] [ALPHABET_SIZE] [MARKOV_LEN];
+   static float  Positive_Table [ATG_LEN] [ALPHABET_SIZE] [MARKOV_LEN];
+   static float  Negative_Table [ATG_LEN] [ALPHABET_SIZE] [MARKOV_LEN];
    static int  Tables_Loaded = FALSE;
    double  Positive_Sum, Negative_Sum, Score;
    int i, j, k, Ct, Sub;
@@ -645,36 +644,36 @@ int  Is_Stop  (const int * S, double * Return_Score)
 
    if  (! Tables_Loaded)
        {
-        Infile = fopen (STOP_FILE_NAME, "r");
+        Infile = fopen (ATG_FILE_NAME, "r");
         if  (Infile == NULL)
             {
-             fprintf (stderr, "ERROR:  Unable to open stop file \"%s\"\n",
-                        STOP_FILE_NAME);
+             fprintf (stderr, "ERROR:  Unable to open atg file \"%s\"\n",
+                        ATG_FILE_NAME);
              exit (EXIT_FAILURE);
             }
 
-        for  (i = MARKOV_DEGREE - 1;  i < STOP_LEN;  i ++)
+        for  (i = MARKOV_DEGREE - 1;  i < ATG_LEN;  i ++)
           for  (k = 0;  k < MARKOV_LEN;  k ++)
             for  (j = 0;  j < ALPHABET_SIZE;  j ++)
               {
                Ct = fscanf (Infile, "%f", & Positive_Table [i] [j] [k]);
                if  (Ct != 1)
                    {
-                    fprintf (stderr, "ERROR reading stop file \"%s\"\n", 
-                                STOP_FILE_NAME);
+                    fprintf (stderr, "ERROR reading atg file \"%s\"\n",
+                                ATG_FILE_NAME);
                     exit (EXIT_FAILURE);
                    }
               }
 
-        for  (i = MARKOV_DEGREE - 1;  i < STOP_LEN;  i ++)
+        for  (i = MARKOV_DEGREE - 1;  i < ATG_LEN;  i ++)
           for  (k = 0;  k < MARKOV_LEN;  k ++)
             for  (j = 0;  j < ALPHABET_SIZE;  j ++)
               {
                Ct = fscanf (Infile, "%f", & Negative_Table [i] [j] [k]);
                if  (Ct != 1)
                    {
-                    fprintf (stderr, "ERROR reading stop file \"%s\"\n", 
-                                STOP_FILE_NAME);
+                    fprintf (stderr, "ERROR reading atg file \"%s\"\n",
+                                ATG_FILE_NAME);
                     exit (EXIT_FAILURE);
                    }
               }
@@ -684,9 +683,9 @@ int  Is_Stop  (const int * S, double * Return_Score)
         Tables_Loaded = TRUE;
        }
 
-   if ((S [STOP_SIGNAL_OFFSET] != 3 || S [STOP_SIGNAL_OFFSET + 1] != 0 || S [STOP_SIGNAL_OFFSET + 2] != 0) &&    /* TAA */
-       (S [STOP_SIGNAL_OFFSET] != 3 || S [STOP_SIGNAL_OFFSET + 1] != 0 || S [STOP_SIGNAL_OFFSET + 2] != 2) &&    /* TAG */
-       (S [STOP_SIGNAL_OFFSET] != 3 || S [STOP_SIGNAL_OFFSET + 1] != 2 || S [STOP_SIGNAL_OFFSET + 2] != 0))      /* TGA */
+   if  (S [ATG_SIGNAL_OFFSET] != 0
+	   || S [ATG_SIGNAL_OFFSET + 1] != 3
+           || S [ATG_SIGNAL_OFFSET + 2] != 2)    /* ATG */
        {
         * Return_Score = LOW_SCORE;
         return  FALSE;
@@ -699,7 +698,7 @@ int  Is_Stop  (const int * S, double * Return_Score)
    Positive_Sum = Positive_Table [MARKOV_DEGREE - 1] [0] [Sub];
    Negative_Sum = Negative_Table [MARKOV_DEGREE - 1] [0] [Sub];
 
-   for  (i = MARKOV_DEGREE;  i < STOP_LEN;  i ++)
+   for  (i = MARKOV_DEGREE;  i < ATG_LEN;  i ++)
      {
       j = S [i];
       Positive_Sum += Positive_Table [i] [j] [Sub];
@@ -713,7 +712,7 @@ int  Is_Stop  (const int * S, double * Return_Score)
    * Return_Score = Score;
 
 
-   return  Score >= STOP_THRESHOLD;
+   return  Score >= ATG_THRESHOLD;
   }
 
 

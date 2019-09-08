@@ -1,6 +1,6 @@
 /* Copyright (c)  by  Mihaela Pertea.
 *
-* sitesk.c compute a score for splice sites based on karlin's paper 
+* sitesk.c compute a score for splice sites based on karlin's paper
 */
 
 #include  <stdio.h>
@@ -17,13 +17,13 @@
 #define  TRUE  1
 #define  FALSE  0
 #define  ALPHABET_SIZE  4
-#define  ACCEPTOR_LEN  29                    
+#define  ACCEPTOR_LEN  29
 #define  ACCEPTOR_SIGNAL_OFFSET  24          /* Start of  AG  */
 #define  ACCEPTOR_FILE_NAME "acc"
 #define  ACCEPTOR_TREE_FILE "outex"
 #define  ACCEPTOR_THRESHOLD 0
 
-#define  DONOR_LEN  16                        
+#define  DONOR_LEN  16
 #define  DONOR_SIGNAL_OFFSET  5               /* Start of  GT  */
 #define  DONOR_FILE_NAME "don"
 #define  DONOR_TREE_FILE "outin"
@@ -88,7 +88,7 @@ void readtree(char *line, tree *t, int start);
 int find(char *line, int start);
 
 int main ( int argc, char * argv [])
-{ 
+{
    FILE  * Infile, *Outfile;
    char  S [MAX_STRING_LEN], T [MAX_STRING_LEN], Name[MAX_STRING_LEN];
    char D [MAX_DATA_LEN];
@@ -108,11 +108,11 @@ int main ( int argc, char * argv [])
         fprintf (stderr, "USAGE:  %s <SeqFile> <OutFile>  <tacc> <tdon> <thr_acc> <thr_don>\n",
                     argv [0]);
         exit (EXIT_FAILURE);
-       }   
+       }
 
    istacc=atoi(argv[3]);
    istdon=atoi(argv[4]);
-   
+
    thr_acc=atof(argv[5]);
    thr_don=atof(argv[6]);
 
@@ -125,14 +125,14 @@ int main ( int argc, char * argv [])
 	 fprintf (stderr, "ERROR:  Unable to open file %s\n", ACCEPTOR_TREE_FILE);
 	 exit (EXIT_FAILURE);
        }
-     
+
      tacc = (tree *) malloc(sizeof(tree));
-     if (tacc == NULL) {fprintf(stderr,"%s: Memory allocation for tree failure.\n"); abort();}
+     if (tacc == NULL) { fprintf(stderr, "Error: %s memory allocation failure.\n", "tacc tree"); abort();}
      fgets(line, 50000, Infile);
      i=strlen(line);
      line[i-1]='\0';
      fclose(Infile);
-     
+
      readtree(line, tacc, 0);
    }
 
@@ -145,14 +145,14 @@ int main ( int argc, char * argv [])
 	 fprintf (stderr, "ERROR:  Unable to open file %s\n", DONOR_TREE_FILE);
 	 exit (EXIT_FAILURE);
        }
-     
+
      tdon = (tree *) malloc(sizeof(tree));
-     if (tdon == NULL) {fprintf(stderr,"%s: Memory allocation for tree failure.\n"); abort();}
+     if (tdon == NULL) {fprintf(stderr, "Error: %s memory allocation failure.\n", "tdon tree"); abort();}
      fgets(line, 50000, Infile);
      i=strlen(line);
      line[i-1]='\0';
      fclose(Infile);
-     
+
      readtree(line, tdon, 0);
    }
 
@@ -190,7 +190,7 @@ int main ( int argc, char * argv [])
 
 
 	   String_Len = 1 + Stop_PosEx - Start_PosEx;
-	   
+
 	   strncpy(S,D+i-80,NUM_POSITIONS);
 	   S[NUM_POSITIONS]='\0';
 	   assert (strlen (S) == NUM_POSITIONS);
@@ -198,9 +198,9 @@ int main ( int argc, char * argv [])
 	   strncpy (T, S + Start_PosEx, String_Len);
 	   T [String_Len] = '\0';
 	   B = basetoint(T,String_Len);
-      
+
 	   Is_Acceptor(B, &S1, tacc,0);
-	   if(istacc) { 
+	   if(istacc) {
 	     Is_Acceptor(B, &S2, tacc,1);
 	     score1=(S1+S2)/2;
 	   }
@@ -210,7 +210,7 @@ int main ( int argc, char * argv [])
 	   strncpy (T, S + Start_NoCod, CODING_LEN);
 	   T [CODING_LEN] = '\0';
 	   B = basetoint(T,CODING_LEN);
-      
+
 	   score2=0;
 	   Is_Cod_NonCod(B,&score2,0);
       	   free(B);
@@ -218,7 +218,7 @@ int main ( int argc, char * argv [])
 	   strncpy (T, S + Start_Cod, CODING_LEN);
 	   T [CODING_LEN] = '\0';
 	   B = basetoint(T,CODING_LEN);
-	   
+
 	   score3=0;
 	   Is_Cod_NonCod(B,&score3,1);
 
@@ -231,9 +231,9 @@ int main ( int argc, char * argv [])
 	 }
 
 	 if(D[i]=='g' && D[i+1]=='t') { /* if there is a potential donor */
-	   
+
 	   String_Len = 1 + Stop_PosIn - Start_PosIn;
- 
+
 	   strncpy(S,D+i-80,NUM_POSITIONS);
 	   S[NUM_POSITIONS]='\0';
 	   assert (strlen (S) == NUM_POSITIONS);
@@ -256,18 +256,18 @@ int main ( int argc, char * argv [])
 	   strncpy (T, S + Start_Cod, CODING_LEN);
 	   T [CODING_LEN] = '\0';
 	   B = basetoint(T,CODING_LEN);
-	   
+
 	   score2=0;
 	   Is_Cod_NonCod(B,&score2,2);
 	   free(B);
-	   
+
 	   strncpy (T, S + Start_NoCod, CODING_LEN);
 	   T [CODING_LEN] = '\0';
 	   B = basetoint(T,CODING_LEN);
-	   
+
 	   score3=0;
 	   Is_Cod_NonCod(B,&score3,3);
-	   
+
 
 	   Score=score1+score2+score3;
 	   free(B);
@@ -275,7 +275,7 @@ int main ( int argc, char * argv [])
 	   if(Score>=thr_don) fprintf(Outfile,"gt: %ld %f\n",i-Name_len,Score);
 
 	 }
-       }       
+       }
      }
 
    fclose(Infile);
@@ -283,8 +283,8 @@ int main ( int argc, char * argv [])
 
 }
 
-     
-    
+
+
 void readtree(char *line, tree *t, int start)
 {
  int len;
@@ -306,7 +306,7 @@ void readtree(char *line, tree *t, int start)
  i++;
  n=i;
  while(line[i]!=' ')
- { 
+ {
 	part[i-n]=line[i];
 	i++;
  }
@@ -316,7 +316,7 @@ void readtree(char *line, tree *t, int start)
  i++;
  n=i;
  while(line[i]!=' ')
- { 
+ {
 	part[i-n]=line[i];
 	i++;
  }
@@ -326,7 +326,7 @@ void readtree(char *line, tree *t, int start)
  i++;
  n=i;
  while(line[i]!=' ')
- { 
+ {
 	part[i-n]=line[i];
 	i++;
  }
@@ -337,20 +337,20 @@ void readtree(char *line, tree *t, int start)
  t->right=NULL;
 
  i+=2;n=i;
- if(line[i]=='(') 
+ if(line[i]=='(')
  	{
  		i=find(line,i+1);
 		t->left = (tree *) malloc(sizeof(tree));
-   		if (t->left == NULL) {fprintf(stderr,"%s: Memory allocation for tree failure.\n"); abort();}
+   		if (t->left == NULL) {fprintf(stderr, "Error: %s memory allocation failure.\n", "t->left tree"); abort();}
         readtree(line,t->left,n);
      }
-	
+
  i+=2;n=i;
- if(line[i]=='(') 
+ if(line[i]=='(')
  	{
  		i=find(line,i+1);
 		t->right = (tree *) malloc(sizeof(tree));
-   		if (t->right == NULL) {fprintf(stderr,"%s: Memory allocation for tree failure.\n"); abort();}
+   		if (t->right == NULL) {fprintf(stderr, "Error: %s memory allocation failure.\n", "t->right tree"); abort();}
         readtree(line,t->right,n);
      }
 }
@@ -371,23 +371,23 @@ int find(char *line, int start)
 
  return(stop);
 }
- 	
+
 
 int comp(const void *a, const void *b)
-{ 
+{
   if(*(double *)a > *(double *)b) return(1);
   else if (*(double *)a==*(double *)b) return(0);
   else return(-1);
 
-}  
-  
+}
+
 
 /* convert the acgt sequence into a sequence of 0123 -- integers */
 int *basetoint(char sequence[], long length)
 {
   int *intarray;
   long i;
-  
+
   intarray = (int *) malloc((length+1)*sizeof(int));
   MemCheck(intarray,"intarray");
 
@@ -425,7 +425,7 @@ int findfile(const int * S, tree *t)
 	cons=t->consens;
 
 	if( cons !=-1)
-	{ 
+	{
 		poz=t->poz;
 	    if(S[poz]==cons)
 	    	val=findfile(S,t->left);
@@ -448,7 +448,7 @@ int  Is_Acceptor  (const int * S, double * Return_Score, tree *t,int ind)
    FILE  * Infile;
    static float  Positive_Table[300][ACCEPTOR_LEN] [ALPHABET_SIZE] [MARKOV_LEN];
    static float  Negative_Table[300][ACCEPTOR_LEN] [ALPHABET_SIZE] [MARKOV_LEN];
-   static int Tables_Loaded[300]={FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE}; 
+   static int Tables_Loaded[300]={FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE};
    double  Positive_Sum, Negative_Sum, Score;
    char accname[20];
 #if  RETURN_TRUE_PROB
@@ -458,12 +458,12 @@ int  Is_Acceptor  (const int * S, double * Return_Score, tree *t,int ind)
 
 /* see which acceptor you should use */
 
-if(ind) 
+if(ind)
   {
 	no=findfile(S,t);
 	sprintf(accname,"%s%d",ACCEPTOR_FILE_NAME,no);
   }
-else 
+else
   {
     strcpy(accname,"acc1.mar");
     no=0;
@@ -486,7 +486,7 @@ else
                Ct = fscanf (Infile, "%f", & Positive_Table [no][i] [j] [k]);
                if  (Ct != 1)
                    {
-                    fprintf (stderr, "ERROR reading acceptor file \"%s\"\n", 
+                    fprintf (stderr, "ERROR reading acceptor file \"%s\"\n",
                                 ACCEPTOR_FILE_NAME);
                     exit (EXIT_FAILURE);
                    }
@@ -499,7 +499,7 @@ else
                Ct = fscanf (Infile, "%f", & Negative_Table [no][i] [j] [k]);
                if  (Ct != 1)
                    {
-                    fprintf (stderr, "ERROR reading acceptor file \"%s\"\n", 
+                    fprintf (stderr, "ERROR reading acceptor file \"%s\"\n",
                                 ACCEPTOR_FILE_NAME);
                     exit (EXIT_FAILURE);
                    }
@@ -531,7 +531,7 @@ else
       Negative_Sum += Negative_Table [no] [i] [j] [Sub];
       Sub = ALPHABET_SIZE * (Sub % (MARKOV_LEN / ALPHABET_SIZE)) + j;
      }
-  
+
 
 
    Score = Positive_Sum - Negative_Sum;
@@ -560,7 +560,7 @@ int  Is_Donor  (const int * S, double * Return_Score, tree *t,int ind)
    FILE  * Infile;
    static float  Positive_Table [300][DONOR_LEN] [ALPHABET_SIZE] [MARKOV_LEN];
    static float  Negative_Table [300][DONOR_LEN] [ALPHABET_SIZE] [MARKOV_LEN];
-   static int Tables_Loaded[300]={FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE}; 
+   static int Tables_Loaded[300]={FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE};
    double  Positive_Sum, Negative_Sum, Score;
    char donname[20];
    int no;
@@ -575,7 +575,7 @@ if(ind)
    { no=findfile(S,t);
     sprintf(donname,"%s%d",DONOR_FILE_NAME,no);
    }
-else 
+else
 {
   strcpy(donname,"don1.mar");
   no=0;
@@ -599,7 +599,7 @@ else
                Ct = fscanf (Infile, "%f", & Positive_Table [no] [i] [j] [k]);
                if  (Ct != 1)
                    {
-                    fprintf (stderr, "ERROR reading donor file \"%s\" where no=%d\n", 
+                    fprintf (stderr, "ERROR reading donor file \"%s\" where no=%d\n",
                                 DONOR_FILE_NAME,no);
                     exit (EXIT_FAILURE);
                    }
@@ -612,7 +612,7 @@ else
                Ct = fscanf (Infile, "%f", & Negative_Table [no] [i] [j] [k]);
                if  (Ct != 1)
                    {
-                    fprintf (stderr, "ERROR reading donor file \"%s\" where no=%d\n", 
+                    fprintf (stderr, "ERROR reading donor file \"%s\" where no=%d\n",
                                 DONOR_FILE_NAME,no);
                     exit (EXIT_FAILURE);
                    }
@@ -645,7 +645,7 @@ else
       Negative_Sum += Negative_Table [no] [i] [j] [Sub];
       Sub = ALPHABET_SIZE * (Sub % (MARKOV_LEN / ALPHABET_SIZE)) + j;
      }
- 
+
    Score = Positive_Sum - Negative_Sum;
 
 #if  RETURN_TRUE_PROB
@@ -724,7 +724,7 @@ int  Is_Cod_NonCod  (const int * S, double * Return_Score, int ind)
                Ct = fscanf (Infile, "%f", & Positive_Table [no] [i] [j] [k]);
                if  (Ct != 1)
                    {
-                    fprintf (stderr, "ERROR reading donor file \"%s\"\n", 
+                    fprintf (stderr, "ERROR reading donor file \"%s\"\n",
                                 DONOR_FILE_NAME);
                     exit (EXIT_FAILURE);
                    }
@@ -737,7 +737,7 @@ int  Is_Cod_NonCod  (const int * S, double * Return_Score, int ind)
                Ct = fscanf (Infile, "%f", & Negative_Table [no] [i] [j] [k]);
                if  (Ct != 1)
                    {
-                    fprintf (stderr, "ERROR reading donor file \"%s\"\n", 
+                    fprintf (stderr, "ERROR reading donor file \"%s\"\n",
                                 DONOR_FILE_NAME);
                     exit (EXIT_FAILURE);
                    }
@@ -762,7 +762,7 @@ int  Is_Cod_NonCod  (const int * S, double * Return_Score, int ind)
       Negative_Sum += Negative_Table [no] [i] [j] [Sub];
       Sub = ALPHABET_SIZE * (Sub % (MARKOV_LEN / ALPHABET_SIZE)) + j;
      }
- 
+
 
 
    Score = Positive_Sum - Negative_Sum;

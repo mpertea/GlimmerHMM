@@ -1,84 +1,79 @@
 # Copyright (c) 2003 by Mihaela Pertea.
 
-# C compiler
 
-C       = gcc 
-CC      = g++ 
-#CFLAGS  = -O1 ${SEARCHDIRS}
-#CFLAGS  = -O3 -g -Wall
-CFLAGS = -Wall -g
-LIBS    = -lm
+BASEFLAGS  = -Wall -Wextra -D_REENTRANT -fno-exceptions -fno-rtti
+CXX   := $(if $(CXX),$(CXX),g++)
+LINKER  := $(if $(LINKER),$(LINKER),g++)
 
-MAKEFILE= makefile
+LDFLAGS := $(if $(LDFLAGS),$(LDFLAGS),-g)
+
+CXXFLAGS := $(if $(CXXFLAGS),$(BASEFLAGS) $(CXXFLAGS),$(BASEFLAGS))
+
+LIBS := -lm
+
+ifneq (,$(filter %release, $(MAKECMDGOALS)))
+  CXXFLAGS := -O3 -g -DNDEBUG $(CXXFLAGS)
+else # debug build
+  CXXFLAGS += -g -O0 -D_DEBUG -DGDEBUG
+endif
+
+%.o : %.cpp
+	${CXX} ${CXXFLAGS} -c $< -o $@
+
+# C/C++ linker
+
+LINKER    := g++
+
+TARGETS = build-icm build-icm-noframe build1 build2 falsecomp findsites karlin score score2 scoreATG scoreATG2 scoreSTOP scoreSTOP2 erfapp splicescore
 
 .PHONY : all
-all:    build-icm build-icm-noframe build1 build2 falsecomp findsites karlin score score2 scoreATG scoreATG2 scoreSTOP scoreSTOP2 erfapp splicescore
-
-
-misc.o: misc.c
-	${C} ${CFLAGS} -c misc.c
-
-build-icm.o: build-icm.c
-	${C} ${CFLAGS} -c build-icm.c
+all:  ${TARGETS}
 
 build-icm: build-icm.o misc.o
-	$(C) ${CFLAGS} -o $@ build-icm.o misc.o $(LIBS)
-
-build-icm-noframe.o: build-icm-noframe.c
-	${C} ${CFLAGS} -c build-icm-noframe.c
+	${LINKER} ${LDFLAGS} -o $@ ${filter-out %.a %.so, $^} ${LIBS}
 
 build-icm-noframe: build-icm-noframe.o misc.o
-	$(C) ${CFLAGS} -o $@ build-icm-noframe.o misc.o $(LIBS)
+	${LINKER} ${LDFLAGS} -o $@ ${filter-out %.a %.so, $^} ${LIBS}
 
-build1: build1.o
-	${CC} ${CFLAGS} build1.c -o build1 $(LIBS)
+build1: build1.cpp
+	${CXX} ${CXXFLAGS} $< -o $@ ${LIBS}
 
-build2: build2.o
-	${CC} ${CFLAGS} build2.c -o build2 $(LIBS)
+build2: build2.cpp
+	${CXX} ${CXXFLAGS} $< -o $@ ${LIBS}
 
-falsecomp: falsecomp.o
-	${CC} ${CFLAGS} falsecomp.c -o falsecomp $(LIBS)
+falsecomp: falsecomp.cpp
+	${CXX} ${CXXFLAGS} $< -o $@ ${LIBS}
 
-findsites: findsites.o
-	${CC} ${CFLAGS} findsites.c -o findsites $(LIBS)
+findsites: findsites.cpp
+	${CXX} ${CXXFLAGS} $< -o $@ ${LIBS}
 
-karlin: karlin.o
-	${CC} ${CFLAGS} karlin.c -o karlin $(LIBS)
+karlin: karlin.cpp
+	${CXX} ${CXXFLAGS} $< -o $@ ${LIBS}
 
-score: score.o
-	${CC} ${CFLAGS} score.c -o score $(LIBS)
+score: score.cpp
+	${CXX} ${CXXFLAGS} $< -o $@ ${LIBS}
 
-score2: score2.o
-	${CC} ${CFLAGS} score2.c -o score2 $(LIBS)
+score2: score2.cpp
+	${CXX} ${CXXFLAGS} $< -o $@ ${LIBS}
 
-scoreATG: scoreATG.o
-	${CC} ${CFLAGS} scoreATG.c -o scoreATG $(LIBS)
+scoreATG: scoreATG.cpp
+	${CXX} ${CXXFLAGS} $< -o $@ ${LIBS}
 
-scoreATG2: scoreATG2.o
-	${CC} ${CFLAGS} scoreATG2.c -o scoreATG2 $(LIBS)
+scoreATG2: scoreATG2.cpp
+	${CXX} ${CXXFLAGS} $< -o $@ ${LIBS}
 
-scoreSTOP: scoreSTOP.o
-	${CC} ${CFLAGS} scoreSTOP.c -o scoreSTOP $(LIBS)
+scoreSTOP: scoreSTOP.cpp
+	${CXX} ${CXXFLAGS} $< -o $@ ${LIBS}
 
-escoreSTOP2: scoreSTOP2.o
-	${CC} ${CFLAGS} scoreSTOP2.c -o scoreSTOP2 $(LIBS)
+scoreSTOP2: scoreSTOP2.cpp
+	${CXX} ${CXXFLAGS} $< -o $@ ${LIBS}
 
-rfapp: erfapp.o
-	${CC} ${CFLAGS} erfapp.c -o erfapp $(LIBS)
-
-sites.o: sites.c
-	${CC} ${CFLAGS} -c sites.c
-
-utils.o: utils.c 
-	${CC} ${CFLAGS} -c utils.c
-
-splicescore.o: splicescore.c
-	${CC} ${CFLAGS} -c splicescore.c
+erfapp: erfapp.cpp
+	${CXX} ${CXXFLAGS} $< -o $@ ${LIBS}
 
 splicescore: splicescore.o sites.o utils.o
-	${CC} splicescore.o sites.o utils.o -o splicescore $(LIBS)
+	${LINKER} ${LDFLAGS} -o $@ ${filter-out %.a %.so, $^} ${LIBS}
+
 .PHONY : clean
 clean::
-	/bin/rm -f core* splicescore *.o score build? build-icm \
-build-icm-noframe erfapp falsecomp findsites karlin score2 scoreATG \
-scoreATG2 scoreSTOP scoreSTOP2 trainGlimmerHMM
+	/bin/rm -f core* *.o ${TARGETS}

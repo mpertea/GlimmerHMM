@@ -42,7 +42,7 @@ typedef struct tree {
 const int  MAX_STRING_LEN = 110;
 const int  NUM_POSITIONS = 80;
 int  Start_Position;
-int  Stop_Position; 
+int  Stop_Position;
 int Nofile;
 int off; /* the offset of gt or ag */
 
@@ -54,7 +54,7 @@ void save(FILE *Outfile, tree *t);
 double chi_square(int cons, int poz);
 
 int main ( int argc, char * argv [])
-{ 
+{
    tree *t;
    FILE  * Outfile;
    int i;
@@ -74,9 +74,9 @@ int main ( int argc, char * argv [])
    	W[i]=1;
    W[off]=0;
    W[off+1]=0;
-      
+
    t = (tree *) malloc(sizeof(tree));
-   if (t == NULL) {fprintf(stderr,"%s: Memory allocation for tree failure.\n"); abort();}
+   if (t == NULL) {fprintf(stderr, "Error: %s memory allocation failure.\n", "t tree"); abort();}
 
    Nofile=0;
    t->val=Nofile;
@@ -110,7 +110,7 @@ void save(FILE *Outfile, tree *t)
   if(t->left != NULL) save(Outfile, t->left);
   fprintf(Outfile," r");
   if(t->right != NULL) save(Outfile, t->right);
-  fprintf(Outfile," )");  
+  fprintf(Outfile," )");
 }
 
 void split(tree *t, char *Inname,char *Outname)
@@ -123,7 +123,7 @@ void split(tree *t, char *Inname,char *Outname)
    char Outname1[20], Outname2[20];
    double max, Sum;
    fpos_t pos;
-   
+
    Infile = fopen (Inname, "r");
    if  (Infile == NULL)
        {
@@ -131,7 +131,7 @@ void split(tree *t, char *Inname,char *Outname)
         exit (EXIT_FAILURE);
        }
 
-   String_Len = 1 + Stop_Position - Start_Position;  
+   String_Len = 1 + Stop_Position - Start_Position;
 
    /* initialize frequencies for consensus */
    for(i=0;i<String_Len;i++)
@@ -149,18 +149,18 @@ void split(tree *t, char *Inname,char *Outname)
       sscanf (T, "%*s %s", S);
       assert (strlen (S) == NUM_POSITIONS);
       strncpy (T, S + Start_Position, String_Len);
-      T [String_Len] = '\0'; 
+      T [String_Len] = '\0';
       N++;
 
-      B = basetoint(T,String_Len); 
+      B = basetoint(T,String_Len);
 
       /* compute frequencies for each position */
-      
+
       for(i=0;i<String_Len;i++)
       	V[i][B[i]]++;
-      	
-      free(B); 
-    }  
+
+      free(B);
+    }
 
     t->no=N;
 
@@ -174,7 +174,7 @@ void split(tree *t, char *Inname,char *Outname)
 				C[i]=j;
 				max=V[i][j];
 			}
-	  } 
+	  }
 
 	/*compute match between consensus and variable at position j */
 	for(i=0;i<String_Len;i++)
@@ -189,7 +189,7 @@ void split(tree *t, char *Inname,char *Outname)
       sscanf (T, "%*s %s", S);
       assert (strlen (S) == NUM_POSITIONS);
       strncpy (T, S + Start_Position, String_Len);
-      T [String_Len] = '\0'; 
+      T [String_Len] = '\0';
       B = basetoint(T,String_Len);
       for(i=0;i<String_Len;i++)
       	if(C[i]==B[i])
@@ -214,7 +214,7 @@ void split(tree *t, char *Inname,char *Outname)
 		/*printf("i=%d,j=%d,Ci=%d,Vj0=%d,Vj1=%d,Vj2=%d,Vj3=%d,Mij0=%d,Mij1=%d,Mij2=%d,Mij3=%d\n",i,j,C[i],V[j][0],V[j][1],V[j][2],V[j][3],M[i][j][0],M[i][j][1],M[i][j][2],M[i][j][3]);
 		fflush(stdout);*/
 
-		if(W[j]) 
+		if(W[j])
 			Sum+=chi_square(i,j);
 	}
 	W[i]=1;
@@ -225,7 +225,7 @@ void split(tree *t, char *Inname,char *Outname)
 		maxi=i;
 
 	}
-   } 
+   }
 
    printf("Consens %d pe poz %d\n",C[maxi],maxi);
 
@@ -257,15 +257,15 @@ void split(tree *t, char *Inname,char *Outname)
      fsetpos(Infile,&pos);*/
    rewind(Infile);
    while  (fgets (T, MAX_STRING_LEN, Infile) != NULL)
-     {  
+     {
      	strcpy(Copy,T);
 		sscanf (T, "%*s %s", S);
       	assert (strlen (S) == NUM_POSITIONS);
       	strncpy (T, S + Start_Position, String_Len);
-      	T [String_Len] = '\0'; 
-	    B = basetoint(T,String_Len); 
+      	T [String_Len] = '\0';
+	    B = basetoint(T,String_Len);
 	    if(B[maxi] == C[maxi])
-	    { 
+	    {
 	    	N1++;
 	    	fprintf(NextInfile1,"%s",Copy);
 	    }
@@ -292,23 +292,23 @@ void split(tree *t, char *Inname,char *Outname)
 	//if(N1+N2>1000)
 	if(N1>400 && N2>400)
 	{   t->consens=C[maxi];
-   		t->poz=maxi;   	
+   		t->poz=maxi;
 		t->left = (tree *) malloc(sizeof(tree));
-   		if (t->left == NULL) {fprintf(stderr,"%s: Memory allocation for tree failure.\n"); abort();}
+   		if (t->left == NULL) { fprintf(stderr, "Error: %s memory allocation failure.\n", "split t->left tree");  abort();}
 		(t->left)->val=tempnofile+1;
    		(t->left)->consens=-1;
 		(t->left)->poz=-1;
 		(t->left)->no=N1;
    		(t->left)->left=NULL;
-   		(t->left)->right=NULL;	
-		if(N1>350) 
-			{ 
+   		(t->left)->right=NULL;
+		if(N1>350)
+			{
 				W[maxi]=0;
 				split(t->left,Outname1,Outname);
 			}
 		W[maxi]=1;
 		t->right = (tree *) malloc(sizeof(tree));
-   		if (t->right == NULL) {fprintf(stderr,"%s: Memory allocation for tree failure.\n"); abort();}
+   		if (t->right == NULL) {fprintf(stderr, "Error: %s memory allocation failure.\n", "split t->right tree"); abort();}
    		(t->right)->val=tempnofile+2;
    		(t->right)->consens=-1;
    		(t->right)->poz=-1;
@@ -317,7 +317,7 @@ void split(tree *t, char *Inname,char *Outname)
    		(t->right)->right=NULL;
 		if(N2>350) split(t->right,Outname2,Outname);
 	}
-   		
+
    fclose(Infile);
 
 }
@@ -329,7 +329,7 @@ double chi_square(int c,int poz)
 	int i,j,n;
 
 	n=V[poz][0]+V[poz][1]+V[poz][2]+V[poz][3];
-		
+
 	for(j=0;j<4;j++)
 	{
 		cell1[0][j]=M[c][poz][j];
@@ -351,7 +351,7 @@ double chi_square(int c,int poz)
 		for(j=0;j<4;j++)
 		{
 			if(cell2[i][j]!=0)
-			{ 
+			{
 				chi+=(cell1[i][j]-cell2[i][j])*(cell1[i][j]-cell2[i][j])/cell2[i][j];
 			}
 		}
@@ -365,7 +365,7 @@ int *basetoint(char sequence[], long length)
 {
   int *intarray;
   long i;
-  
+
   intarray = (int *) malloc((length+1)*sizeof(int));
   MemCheck(intarray,"intarray");
 

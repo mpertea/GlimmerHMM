@@ -5,10 +5,10 @@
 
 #include "misc.h"
 
-static char *cr = "copywrite (c) Doug Harmon 1997";
+static const char *cr = "copywrite (c) Doug Harmon 1997";
 
 
-/* check_calloc() allocates space for an array of num_elem  
+/* check_calloc() allocates space for an array of num_elem
  * elements  of size elem_size. The space is initialized to zeros.
  */
 void *
@@ -28,7 +28,7 @@ check_calloc (size_t num_elem, size_t elem_size)
 
 
 
-FILE * 
+FILE *
 check_fopen (const char *filename, const char * type)
 {
   FILE *fptr;
@@ -66,11 +66,11 @@ check_malloc(size_t size)
 
 /* check_realloc() changes the size of the block pointed to by ptr to
  * size  bytes  and  returns  a pointer to the (possibly moved)
- * block.  The contents will be unchanged up to the  lesser  of 
+ * block.  The contents will be unchanged up to the  lesser  of
  * the  new  and  old sizes.  If ptr is NULL, check_realloc() behaves
  * like malloc() for the specified size.  If size is  zero  and
  * ptr is not a null pointer, the object pointed to is freed.
- */ 
+ */
 void *
 check_realloc (void *ptr, size_t size)
 {
@@ -81,7 +81,7 @@ check_realloc (void *ptr, size_t size)
      fprintf (stderr, "no core for realloc of size %ld\n", size);
      exit (1);
   }
- 
+
   return (ptr) ;
 }
- 
+

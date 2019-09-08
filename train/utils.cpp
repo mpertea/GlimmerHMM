@@ -51,16 +51,16 @@ void usage(char *);
 /* Remarks       :	These are general-purpose utility       */
 /*                      routines used by most of the modules    */
 /*                      in the package.	                        */
-/****************************************************************/	
+/****************************************************************/
 #include <stdio.h>
 
 
 /************************************************************************/
-/* Module name : error							*/ 
+/* Module name : error							*/
 /* Functionality :	Displays an error message, and exits execution	*/
 /*			normally.					*/
 /************************************************************************/
-int error(char *error_text)
+int error(const char *error_text)
 {
   printf("Runtime Error.\n%s.\nExecution Terminated.\n",error_text);
   exit(1);
@@ -79,7 +79,7 @@ int error(char *error_text)
 int *ivector(int nl, int nh)
 {
   int *v;
-  
+
   v=(int *)malloc((unsigned)(nh-nl+1)*sizeof(int));
   if (v==NULL) error("Ivector : Memory allocation failure.");
   return(v-nl);
@@ -96,7 +96,7 @@ int *ivector(int nl, int nh)
 float *vector(int nl, int nh)
 {
   float *v;
-  
+
   v=(float *)malloc((unsigned)(nh-nl+1)*sizeof(float));
   if (v==NULL) error("Vector : Memory allocation failure.");
   return (v-nl);
@@ -113,7 +113,7 @@ float *vector(int nl, int nh)
 double *dvector(int nl,int nh)
 {
   double *v;
-  
+
   v=(double *)malloc((unsigned)(nh-nl+1)*sizeof(double));
   if (v==NULL) error("Dvector : Memory allocation failure.");
   return (v-nl);
@@ -162,14 +162,14 @@ void free_dvector(double *v, int nl, int nh)
 }
 
 /************************************************************************/
-/* Module name : Usage                                                  */ 
+/* Module name : Usage                                                  */
 /* Functionality : Displays a list of possible options for MKTREE, GENDATA*/
 /*                 and DISPLAY modules. Is activated in irritatingly    */
 /*                 many situations. More precisely, whenever an incorrect*/
 /*                 option is specified, or an option is accompanied by  */
 /*                 incorrect argument, or when incorrect combinations of*/
 /*                 options are used, this module is activated.          */
-/* Parameters : pname: name of the program whose options are to be shown*/           
+/* Parameters : pname: name of the program whose options are to be shown*/
 /************************************************************************/
 void usage(char *pname)
 {
@@ -217,7 +217,7 @@ void usage(char *pname)
       fprintf(stderr,"\n    -V<#partitions for cross validation>  (Default=0)");
       fprintf(stderr,"\n       (-1 : leave-one-out, 0 = no CV)");
     }
-  
+
  if (!strcmp(pname,"display"))
     {
       fprintf (stderr,"\n\nUsage : display -d:D:eh:o:t:T:vw:x:X:y:Y:");
@@ -245,7 +245,7 @@ void usage(char *pname)
       fprintf (stderr,"\n    -Y<maximum y coord for the display>");
       fprintf (stderr,"\n      (Default=calculated from point set or 1)");
     }
-  
+
   if (!strcmp(pname,"gendata"))
     {
       fprintf (stderr,"\n\nUsage : gendata -a:b:c:d:D:n:N:o:s:t:T:uv");
