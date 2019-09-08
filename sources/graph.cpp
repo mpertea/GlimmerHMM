@@ -226,10 +226,10 @@ Site **graph ( char *PData,long int PData_Len,char *TRAIN_DIR, long int *splices
 
   initparam(mintron,minterg,m5utr,m3utr);
 
-  Data=PData;
+  Data=PData;  // local copy of the data pointer - not clear why I do this
   Data_Len = PData_Len;
 
-  Acc_Thr = NO_SCORE;
+  Acc_Thr = NO_SCORE; // all these values will be read from the configuration training file later
   Don_Thr = NO_SCORE;
   Atg_Thr = NO_SCORE;
   Stop_Thr = NO_SCORE;
@@ -265,7 +265,7 @@ Site **graph ( char *PData,long int PData_Len,char *TRAIN_DIR, long int *splices
 
   // configuration file depends on CG percentage
   strcpy(File_Name,TRAIN_DIR);
-  strcat(File_Name,"config.file");
+  strcat(File_Name,"config.file"); // read configuration file from the training directory
   fp = fopen (File_Name, "r");
   if  (fp == NULL)
     {
@@ -278,12 +278,12 @@ Site **graph ( char *PData,long int PData_Len,char *TRAIN_DIR, long int *splices
   i=0;
   Param[0]='\0';
   while(fgets (Line, MAX_LINE, fp) != NULL) {
-    sscanf(Line,"%*s %*s %f %s %s",&readval,File_Name,Param);
-
-    if(!readval) { multiple=1;}
+    sscanf(Line,"%*s %*s %f %s %s",&readval,File_Name,Param); // typical line in config.file C+G <= 43 human0-43.cfg Train0-43;
+    														  // Param sets the sub-directory (e.g. Train0-43) where I can find the specific training configuration file (human0-43.cfg)
+    if(!readval) { multiple=1;} // not normally used; represents the case when there are model models (MODEL_NO>1)
     else {
-      if(!multiple) { // this is default mode for training files -> only one model (MODEL_NO=1)
-    	  if(cgperc<=readval) {
+      if(!multiple) { // this is the latest mode for training files; by default only one model (MODEL_NO=1); I don't think I ever implemented more than one model
+    	  if(cgperc<=readval) { // readval indicates the maximum CG percentage of the sequence; training parameters depend on the CG composition of the sequence
     		  strcpy(CONFIG_FILE[0],File_Name);
     		  if(strcmp(Param,"")) {
     			  TRAIN_DIR=(char *) realloc(TRAIN_DIR,(strlen(TRAIN_DIR)+strlen(Param)+1)*sizeof(char));
@@ -294,7 +294,7 @@ Site **graph ( char *PData,long int PData_Len,char *TRAIN_DIR, long int *splices
 	  break;
 	}
       }
-      else {
+      else { // multiple models - not common
 	strcpy(CONFIG_FILE[i],File_Name);
 	if(strcmp(Param,"")) {
 	  TRAIN_DIR=(char *) realloc(TRAIN_DIR,(strlen(TRAIN_DIR)+strlen(Param)+1)*sizeof(char));
@@ -310,7 +310,7 @@ Site **graph ( char *PData,long int PData_Len,char *TRAIN_DIR, long int *splices
 
   fclose(fp);
 
-  strcpy(MATRIXA_FILE,"");
+  strcpy(MATRIXA_FILE,""); // these files are not commonly used
   strcpy(WEIGHTA_FILE,"");
   strcpy(SCALEA_FILE,"");
   strcpy(MATRIXD_FILE,"");
@@ -318,12 +318,12 @@ Site **graph ( char *PData,long int PData_Len,char *TRAIN_DIR, long int *splices
   strcpy(SCALED_FILE,"");
 
 
-  for(i=0;i<MODEL_NO;i++) {
+  for(i=0;i<MODEL_NO;i++) { // usually on
 
     assert(CONFIG_FILE[i][0] != '\0');
 
     strcpy(Line,TRAIN_DIR);
-    strcat(Line,CONFIG_FILE[i]);
+    strcat(Line,CONFIG_FILE[i]); // here Line holds complete configuration file path; e.g. /GlimmerHMM/trained_dir/human/Train0-43/human0-43.cfg
 
     fp = fopen (Line, "r");
     if  (fp == NULL)
@@ -332,13 +332,13 @@ Site **graph ( char *PData,long int PData_Len,char *TRAIN_DIR, long int *splices
 	exit (0);
       }
 
-    while(fgets (Line, MAX_LINE, fp) != NULL) {
-      sscanf(Line,"%s %s", Param, File_Name);
-      if(strcmp (Param,"coding_model_file") == 0 ) {
+    while(fgets (Line, MAX_LINE, fp) != NULL) { // use variable Line to read information from configuration file line by line
+      sscanf(Line,"%s %s", Param, File_Name); // typical line: coding_model_file coding.12.model OR MeanIntergen 175000
+      if(strcmp (Param,"coding_model_file") == 0 ) { // sets value for every parameter present in configuration file
 	strcpy(CODING_FILE[i],File_Name);
 	continue;
       }
-      if(strcmp (Param,"use_protein")==0) {
+      if(strcmp (Param,"use_protein")==0) { // not common
 	Use_Protein[i]=1;
 	strcpy(PROTEIN_FILE[i],File_Name);
 	continue;
@@ -360,85 +360,85 @@ Site **graph ( char *PData,long int PData_Len,char *TRAIN_DIR, long int *splices
 	assert(istacc == 0 || istacc ==1);
 	continue;
       }
-      if(ese && strcmp (Param,"acceptor_ese")==0) {
+      if(ese && strcmp (Param,"acceptor_ese")==0) { // not common
 	esea=atoi(File_Name);
 	assert(esea==0 || esea==1);
 	continue;
       }
-      if(ese && strcmp (Param,"donor_ese")==0) {
+      if(ese && strcmp (Param,"donor_ese")==0) { // not common
 	esed=atoi(File_Name);
 	assert(esed==0 || esed==1);
 	continue;
       }
-      if(ese && strcmp(Param,"acceptor_motiflen")==0) {
+      if(ese && strcmp(Param,"acceptor_motiflen")==0) { // not common
 	motiflena=atoi(File_Name);
 	assert(motiflena>0);
 	continue;
       }
-      if(ese && strcmp(Param,"MDD_acceptor_leafno")==0) {
+      if(ese && strcmp(Param,"MDD_acceptor_leafno")==0) { // not common
 	leafnoa=atoi(File_Name);
 	assert(leafnoa>0);
 	continue;
       }
-      if(ese && strcmp(Param,"MDD_donor_leafno")==0) {
+      if(ese && strcmp(Param,"MDD_donor_leafno")==0) { // not common
 	leafnod=atoi(File_Name);
 	assert(leafnod>0);
 	continue;
       }
-      if(ese && strcmp(Param,"acceptor_featno")==0) {
+      if(ese && strcmp(Param,"acceptor_featno")==0) { // not common
 	featnoa=atoi(File_Name);
 	assert(featnoa>1);
 	continue;
       }
-      if(ese && strcmp(Param,"acceptor_flanklen")==0) {
+      if(ese && strcmp(Param,"acceptor_flanklen")==0) { // not common
 	flanklena=atoi(File_Name);
 	assert(flanklena>0);
 	continue;
       }
-      if(ese && strcmp(Param,"acceptor_matrixfile")==0) {
+      if(ese && strcmp(Param,"acceptor_matrixfile")==0) { // not common
 	strcpy(MATRIXA_FILE,File_Name);
 	continue;
       }
-      if(ese && strcmp(Param,"acceptor_weightfile")==0) {
+      if(ese && strcmp(Param,"acceptor_weightfile")==0) { // not common
 	strcpy(WEIGHTA_FILE,File_Name);
 	continue;
       }
-      if(ese && strcmp(Param,"acceptor_scalefile")==0) {
+      if(ese && strcmp(Param,"acceptor_scalefile")==0) { // not common
 	strcpy(SCALEA_FILE,File_Name);
 	continue;
       }
-      if(ese && strcmp(Param,"donor_motiflen")==0) {
+      if(ese && strcmp(Param,"donor_motiflen")==0) { // not common
 	motiflend=atoi(File_Name);
 	assert(motiflend>0);
 	continue;
       }
-      if(ese && strcmp(Param,"donor_featno")==0) {
+      if(ese && strcmp(Param,"donor_featno")==0) { // not common
 	featnod=atoi(File_Name);
 	assert(featnod>1);
 	continue;
       }
-      if(ese && strcmp(Param,"donor_flanklen")==0) {
+      if(ese && strcmp(Param,"donor_flanklen")==0) { // not common
 	flanklend=atoi(File_Name);
 	assert(flanklend>0);
 	continue;
       }
-      if(ese && strcmp(Param,"donor_matrixfile")==0) {
+      if(ese && strcmp(Param,"donor_matrixfile")==0) { // not common
 	strcpy(MATRIXD_FILE,File_Name);
 	continue;
       }
-      if(ese && strcmp(Param,"donor_weightfile")==0) {
+      if(ese && strcmp(Param,"donor_weightfile")==0) { // not common
 	strcpy(WEIGHTD_FILE,File_Name);
 	continue;
       }
-      if(ese && strcmp(Param,"donor_scalefile")==0) {
+      if(ese && strcmp(Param,"donor_scalefile")==0) { // not common
 	strcpy(SCALED_FILE,File_Name);
 	continue;
       }
-      if(strcmp (Param,"model_len")==0) {
+      if(strcmp (Param,"model_len")==0) { // model length, usually 6
 	MODEL_LEN[i]=atoi(File_Name);
 	continue;
       }
-      if(strcmp (Param,"partial")==0) {
+      if(strcmp (Param,"partial")==0) { // not common
 	partial[i]=atoi(File_Name);
 	assert(partial[i] == 0 || partial[i] ==1);
 	continue;
@@ -448,22 +448,22 @@ Site **graph ( char *PData,long int PData_Len,char *TRAIN_DIR, long int *splices
 	assert(nocod == 0 || nocod ==1);
 	continue;
       }
-      if(strcmp (Param,"onlytga")==0) {
+      if(strcmp (Param,"onlytga")==0) { // not common; some species do not use all stop codons
 	onlytga=atoi(File_Name);
 	assert(onlytga == 0 || onlytga ==1);
 	continue;
       }
-      if(strcmp (Param,"onlytaa")==0) {
+      if(strcmp (Param,"onlytaa")==0) { // not common
 	onlytaa=atoi(File_Name);
 	assert(onlytaa == 0 || onlytaa ==1);
 	continue;
       }
-      if(strcmp (Param,"onlytag")==0) {
+      if(strcmp (Param,"onlytag")==0) { // not common
 	onlytag=atoi(File_Name);
 	assert(onlytag == 0 || onlytag ==1);
 	continue;
       }
-      if(strcmp (Param,"splice_score")==0) {
+      if(strcmp (Param,"splice_score")==0) { // not common
 	sscore[i]=atoi(File_Name);
 	assert(sscore[i] == 0 || sscore[i] ==1);
 	continue;
@@ -473,11 +473,11 @@ Site **graph ( char *PData,long int PData_Len,char *TRAIN_DIR, long int *splices
 	assert(Use_Intron_Distrib[i] == 0 || Use_Intron_Distrib[i] ==1);
 	continue;
       }
-      if(strcmp (Param,"window_len")==0) {
+      if(strcmp (Param,"window_len")==0) { // not common
 	Win_Len=atoi(File_Name);
 	continue;
       }
-      if(strcmp (Param,"use_filter")==0) {
+      if(strcmp (Param,"use_filter")==0) { // not common
 	Use_Filter=atoi(File_Name);
 	assert(Use_Filter == 0 || Use_Filter ==1);
 	continue;
@@ -495,12 +495,12 @@ Site **graph ( char *PData,long int PData_Len,char *TRAIN_DIR, long int *splices
 	assert(loadfalse == 0 || loadfalse ==1);
 	continue;
       }
-      if(strcmp (Param,"donor_MDD_tree")==0) {
+      if(strcmp (Param,"donor_MDD_tree")==0) { // for some species I do not MDD trees
 	istdon=atoi(File_Name);
 	assert(istdon == 0 || istdon ==1);
 	continue;
       }
-      if(strcmp (Param,"markov_degree")==0) {
+      if(strcmp (Param,"markov_degree")==0) { // usually 2
 	md=atoi(File_Name);
 	assert(md>=1 && md<=3);
 	continue;
@@ -514,32 +514,6 @@ Site **graph ( char *PData,long int PData_Len,char *TRAIN_DIR, long int *splices
 	}
 	continue;
       }
-      /*
-	if(strcmp (Param,"acceptor_max")==0) {
-	Acc_Max = strtod (File_Name,NULL);
-	if  (errno == ERANGE)
-	fprintf (stderr, "ERROR:  Bad acceptor threshold score in config_file: %s\n", File_Name);
-	continue;
-	}
-	if(strcmp (Param,"donor_max")==0) {
-	Don_Max = strtod (File_Name,NULL);
-	if  (errno == ERANGE)
-	fprintf (stderr, "ERROR:  Bad acceptor threshold score in config_file: %s\n", File_Name);
-	continue;
-	}
-	if(strcmp (Param,"atg_max")==0) {
-	Atg_Max = strtod (File_Name,NULL);
-	if  (errno == ERANGE)
-	fprintf (stderr, "ERROR:  Bad acceptor threshold score in config_file: %s\n", File_Name);
-	continue;
-	}
-	if(strcmp (Param,"stop_max")==0) {
-	Stop_Max = strtod (File_Name,NULL);
-	if  (errno == ERANGE)
-	fprintf (stderr, "ERROR:  Bad acceptor threshold score in config_file: %s\n", File_Name);
-	continue;
-	}
-      */
       if(strcmp (Param,"donor_threshold")==0) {
 	if(Don_Thr==NO_SCORE) {
 	  score = strtod (File_Name,NULL);
@@ -549,7 +523,7 @@ Site **graph ( char *PData,long int PData_Len,char *TRAIN_DIR, long int *splices
 	}
 	continue;
       }
-      if(strcmp (Param,"ATG_detection")==0) {
+      if(strcmp (Param,"ATG_detection")==0) { // if this parameter is set to 0 then all ATG codons (no scoring involved) in the sequence will be considered
 	isatg=atoi(File_Name);
 	assert(isatg == 0 || isatg ==1 || isatg==2);
 	continue;
@@ -577,7 +551,7 @@ Site **graph ( char *PData,long int PData_Len,char *TRAIN_DIR, long int *splices
 	}
 	continue;
       }
-      if(strcmp (Param,"Init5'UTR")==0) {
+      if(strcmp (Param,"Init5'UTR")==0) { // not common
 	i5utr = strtod (File_Name,NULL);
 	if  (errno == ERANGE) {
 	  fprintf (stderr, "ERROR:  Bad init 5'UTR parameter in config_file: %s\n", File_Name);
@@ -593,7 +567,7 @@ Site **graph ( char *PData,long int PData_Len,char *TRAIN_DIR, long int *splices
 	}
 	continue;
       }
-      if(strcmp (Param,"Init3'UTR")==0) {
+      if(strcmp (Param,"Init3'UTR")==0) { // not common
 	i3utr = strtod (File_Name,NULL);
 	if  (errno == ERANGE) {
 	  fprintf (stderr, "ERROR:  Bad init 3'UTR parameter in config_file: %s\n", File_Name);
@@ -649,7 +623,7 @@ Site **graph ( char *PData,long int PData_Len,char *TRAIN_DIR, long int *splices
 	}
 	continue;
       }
-      if(strcmp(Param,"MinGene")==0) {
+      if(strcmp(Param,"MinGene")==0) { // not common
 	min_gene_len = strtod (File_Name,NULL);
 	if  (errno == ERANGE) {
 	  fprintf (stderr, "ERROR:  Bad min gene length parameter in config_file: %s\n", File_Name);
@@ -657,7 +631,7 @@ Site **graph ( char *PData,long int PData_Len,char *TRAIN_DIR, long int *splices
 	}
 	continue;
       }
-      if(strcmp (Param,"Mean5'UTR")==0) {
+      if(strcmp (Param,"Mean5'UTR")==0) { // not common
 	m5utr[i] = strtod (File_Name,NULL);
 	if  (errno == ERANGE) {
 	  fprintf (stderr, "ERROR:  Bad mean5'utr threshold score in config_file: %s\n", File_Name);
@@ -665,7 +639,7 @@ Site **graph ( char *PData,long int PData_Len,char *TRAIN_DIR, long int *splices
 	}
 	continue;
       }
-      if(strcmp (Param,"Mean3'UTR")==0) {
+      if(strcmp (Param,"Mean3'UTR")==0) { // not common
 	m3utr[i] = strtod (File_Name,NULL);
 	if  (errno == ERANGE) {
 	  fprintf (stderr, "ERROR:  Bad mean3'utr threshold score in config_file: %s\n", File_Name);
@@ -681,7 +655,7 @@ Site **graph ( char *PData,long int PData_Len,char *TRAIN_DIR, long int *splices
 	}
 	continue;
       }
-      if(strcmp (Param,"UseExonCount")==0) {
+      if(strcmp (Param,"UseExonCount")==0) { // not common
 	ret=atoi(File_Name);
 	assert(ret==0 || ret==1);
 	Use_Exon_Count=ret;
@@ -691,7 +665,7 @@ Site **graph ( char *PData,long int PData_Len,char *TRAIN_DIR, long int *splices
 	score = strtod (File_Name,NULL);
 	score *= snglfactor[i];
 
-	Trans[i][INTERG][ESGLPLUS] = 0.5 *score;
+	Trans[i][INTERG][ESGLPLUS] = 0.5 *score; // transition probability from intergenic to single exon (half the score since it can transition to either + or - strand)
 	if  (errno == ERANGE) {
 	  fprintf (stderr, "ERROR:  Bad sgl transition score in config_file: %s\n", File_Name);
 	  exit(0);
@@ -823,15 +797,15 @@ Site **graph ( char *PData,long int PData_Len,char *TRAIN_DIR, long int *splices
 	Trans[i][I2MINUS][E2MINUS]=Trans[i][E2PLUS][I2PLUS];
 	continue;
       }
-      if(strcmp (Param,"LengthDistrFile")==0) {
+      if(strcmp (Param,"LengthDistrFile")==0) { // exon lengths distribution file --> important for the emission probabilities in GHMM
 	strcpy(EXON_DISTR[i],File_Name);
 	continue;
       }
-      if(strcmp (Param,"ExonNoDistrFile")==0) {
+      if(strcmp (Param,"ExonNoDistrFile")==0) { // not common
 	strcpy(EXONNO_DISTR,File_Name);
 	continue;
       }
-      if(strcmp(Param,"SignalPFile")==0) {
+      if(strcmp(Param,"SignalPFile")==0) { // not common
 	strcpy(SIGNALP_FILE,File_Name);
 	ifSP=1;
 	continue;
@@ -848,7 +822,7 @@ Site **graph ( char *PData,long int PData_Len,char *TRAIN_DIR, long int *splices
 	  fprintf (stderr, "ERROR:  Bad boostsplice score in config_file: %s\n", File_Name);
 	continue;
       }
-      if(strcmp(Param,"BoostSgl")==0) {
+      if(strcmp(Param,"BoostSgl")==0) { // not common
 	score = strtod (File_Name,NULL);
 	if  (errno == ERANGE)
 	  fprintf (stderr, "ERROR:  Bad boostsgl score in config_file: %s\n", File_Name);
@@ -868,7 +842,7 @@ Site **graph ( char *PData,long int PData_Len,char *TRAIN_DIR, long int *splices
 
   // ---------------------------- INIT_DECISION_TREES ------------------
 
-  if(!loadfalse) {
+  if(!loadfalse) { // not common
 
     // read atg/gt/ag/tag scores
     strcpy (File_Name, TRAIN_DIR);
@@ -908,7 +882,7 @@ Site **graph ( char *PData,long int PData_Len,char *TRAIN_DIR, long int *splices
       exit(-1);
     }
   }
-  else {
+  else { // typical run -> uses false positive examples for training
 
     // atg
     strcpy (File_Name, TRAIN_DIR);
@@ -921,10 +895,10 @@ Site **graph ( char *PData,long int PData_Len,char *TRAIN_DIR, long int *splices
     }
 
     fgets (Line, MAX_LINE, fp);
-    sscanf(Line,"%d",&AtgNo);
+    sscanf(Line,"%d",&AtgNo); // number of values in the FP ATG score distribution
 
     AtgFalse=NULL;
-    AtgFalse=(Specif *) malloc(AtgNo*sizeof(Specif));
+    AtgFalse=(Specif *) malloc(AtgNo*sizeof(Specif)); // A member in Specif structure keeps for each score the percentage of FP ATGs I observed that have lower scores
     if(AtgFalse == NULL) {
       fprintf(stderr,"Memory allocation for atg false distribution failure.\n");
       abort();
@@ -1024,30 +998,30 @@ Site **graph ( char *PData,long int PData_Len,char *TRAIN_DIR, long int *splices
   }
 
 
-  // ---------------------------- SCORE --------------------------------
+  // ---------------------------- SCORE -------------------------------- actual scoring procedure starts here
 
-  for(m=0;m<MODEL_NO;m++) {
+  for(m=0;m<MODEL_NO;m++) { // default: one model
 
     // the model file names should be in the parameter file
     strcpy (File_Name, TRAIN_DIR);
     strcat (File_Name, PROTEIN_FILE[m]);
-    if(Use_Protein[m]) Read_AAC(File_Name,m);
+    if(Use_Protein[m]) Read_AAC(File_Name,m); // not common
 
     strcpy (File_Name, TRAIN_DIR);
-    strcat (File_Name, CODING_FILE[m]);
+    strcat (File_Name, CODING_FILE[m]); // keeps ICM scoring scheme
 
-    Read_Coding_Model (File_Name,m);
+    Read_Coding_Model (File_Name,m); // reads ICM scores in MODEL[m][i] where i=0,1,2 for each codon position
 
     // read the noncoding model
     strcpy (File_Name, TRAIN_DIR);
     strcat (File_Name, NONCODING_FILE[m]);
 
-    NMODEL[m]=Read_NonCoding_Model(File_Name);
+    NMODEL[m]=Read_NonCoding_Model(File_Name); // NMODEL[m] stores ICM model for non-coding regions
 
     // allocate space
 
     for(i=0;i<6;i++) {
-      TCod[m][i]=NULL;
+      TCod[m][i]=NULL; // coding scores in each Data point for all 6 reading frames are stored in TCod; m=0 (common), and i gives the frame
       TCod[m][i]=(double *) malloc((Data_Len+2)*sizeof(double));
       if (TCod[m][i] == NULL) {
 	fprintf(stderr,"Memory allocation for coding %ld failure.\n",i);
@@ -1057,7 +1031,7 @@ Site **graph ( char *PData,long int PData_Len,char *TRAIN_DIR, long int *splices
       TCod[m][i][Data_Len+1]=0;
     }
 
-    for(i=0;i<6;i++) {
+    for(i=0;i<6;i++) { // protein domain scores - not common
       PDom[m][i]=NULL;
       PDom[m][i]=(double *) malloc((Data_Len+2)*sizeof(double));
       if (PDom[m][i] == NULL) {
@@ -1071,7 +1045,7 @@ Site **graph ( char *PData,long int PData_Len,char *TRAIN_DIR, long int *splices
 
   }
 
-  for(i=0;i<2;i++) {
+  for(i=0;i<2;i++) { // splice sites detected on forward and reverse strand
     SST[i]=NULL;
     SST[i]=(SpliceSite *) malloc((Data_Len+2)*sizeof(SpliceSite));
     if (SST[i] == NULL) {
@@ -1083,7 +1057,7 @@ Site **graph ( char *PData,long int PData_Len,char *TRAIN_DIR, long int *splices
     // SST[i][0].score=NO_SCORE;
     // SST[i][Data_Len+1].type=-1;
     // SST[i][Data_Len+1].score=NO_SCORE;
-    for(m=0;m<MODEL_NO;m++) {
+    for(m=0;m<MODEL_NO;m++) { // not common
       if(Use_Protein[m]) {
 	Protein[m][i]=NULL;
 	Protein[m][i]=(double *) malloc((Data_Len+2)*sizeof(double));
@@ -1100,8 +1074,8 @@ Site **graph ( char *PData,long int PData_Len,char *TRAIN_DIR, long int *splices
 
   // do the actual scoring here
 
-  // check to see if all parameters needed by ESE splice site determination are there
-  if(esea) {
+  // check to see if all parameters needed by ESE splice site determination are there - not common
+  if(esea) { // acceptor site
     if(!motiflena || !flanklena || !featnoa || !strcmp(WEIGHTA_FILE,"") || !strcmp(MATRIXA_FILE,"") ) {
       fprintf(stderr,"Not enough parameters for ESE acceptor splice site detection!\n");
       esea=0;
@@ -1159,7 +1133,7 @@ Site **graph ( char *PData,long int PData_Len,char *TRAIN_DIR, long int *splices
     }
   }
 
-  if(esed) {
+  if(esed) { // donor site
     if(!motiflend || !flanklend || !featnod || !strcmp(WEIGHTD_FILE,"") || !strcmp(MATRIXD_FILE,"") ) {
       fprintf(stderr,"Not enough parameters for ESE donor splice site detection!\n");
       esed=0;
@@ -1219,7 +1193,7 @@ Site **graph ( char *PData,long int PData_Len,char *TRAIN_DIR, long int *splices
 
   // introduce using domains if given
 
-  if( ProtDomFile != NULL ) {
+  if( ProtDomFile != NULL ) { // - not common
 
     fp = fopen (ProtDomFile, "r");
 
@@ -1272,7 +1246,7 @@ Site **graph ( char *PData,long int PData_Len,char *TRAIN_DIR, long int *splices
   }
 
 
-  if(esea || esed) {
+  if(esea || esed) { // not common
     if(featnoa>=featnod)
       maxmotif = (double *) malloc((featnoa-1)*sizeof(double));
     else
@@ -1286,28 +1260,28 @@ Site **graph ( char *PData,long int PData_Len,char *TRAIN_DIR, long int *splices
 
   /* forward strand */
 
-  ssFno=0;
+  ssFno=0; // splice sites on forward strand
 
-  for(i=1;i<Data_Len+1;i++) {
+  for(i=1;i<Data_Len+1;i++) { // compute GHMM score in each Data position
 
     for(m=0;m<MODEL_NO;m++) {
-      if(Use_Protein[m]) {
-	if(i>=9) {
-	  val = valaac[basetoint(Data[i-2],1)*16+basetoint(Data[i-1],1)*4+basetoint(Data[i],1)]+
-	    valaac[basetoint(Data[i-5],1)*16+basetoint(Data[i-4],1)*4+basetoint(Data[i-3],1)]*23+
-	    valaac[basetoint(Data[i-8],1)*16+basetoint(Data[i-7],1)*4+basetoint(Data[i-6],1)]*529;
-	  Protein[m][0][i]=Protein[m][0][i-3]+Facc[m][val];
-	}
-	else if(i>=6) {
-	  val = valaac[basetoint(Data[i-2],1)*16+basetoint(Data[i-1],1)*4+basetoint(Data[i],1)]+
-	    valaac[basetoint(Data[i-5],1)*16+basetoint(Data[i-4],1)*4+basetoint(Data[i-3],1)]*23;
-	  Protein[m][0][i]=Protein[m][0][i-3]+Facc2[m][val];
-	}
-	else if(i>=3) {
-	  val = valaac[basetoint(Data[i-2],1)*16+basetoint(Data[i-1],1)*4+basetoint(Data[i],1)];
-	  Protein[m][0][i]=Facc1[m][val];
-	}
-	else Protein[m][0][i]=0;
+      if(Use_Protein[m]) { // not common
+    	  if(i>=9) {
+    		  val = valaac[basetoint(Data[i-2],1)*16+basetoint(Data[i-1],1)*4+basetoint(Data[i],1)]+
+    				  valaac[basetoint(Data[i-5],1)*16+basetoint(Data[i-4],1)*4+basetoint(Data[i-3],1)]*23+
+					  valaac[basetoint(Data[i-8],1)*16+basetoint(Data[i-7],1)*4+basetoint(Data[i-6],1)]*529;
+    		  Protein[m][0][i]=Protein[m][0][i-3]+Facc[m][val];
+    	  }
+    	  else if(i>=6) {
+    		  val = valaac[basetoint(Data[i-2],1)*16+basetoint(Data[i-1],1)*4+basetoint(Data[i],1)]+
+    				  valaac[basetoint(Data[i-5],1)*16+basetoint(Data[i-4],1)*4+basetoint(Data[i-3],1)]*23;
+    		  Protein[m][0][i]=Protein[m][0][i-3]+Facc2[m][val];
+    	  }
+    	  else if(i>=3) {
+    		  val = valaac[basetoint(Data[i-2],1)*16+basetoint(Data[i-1],1)*4+basetoint(Data[i],1)];
+    		  Protein[m][0][i]=Facc1[m][val];
+    	  }
+    	  else Protein[m][0][i]=0;
 
 	//      if(i%3==0) { printf("%d %f %f %f\n",i,Protein[m][0][i-2],Protein[m][0][i-1],Protein[m][0][i]);}
 
@@ -1319,32 +1293,32 @@ Site **graph ( char *PData,long int PData_Len,char *TRAIN_DIR, long int *splices
       // if sequence is in the same frame as Data starting at 2 then use TCod[1]
       // if sequence is in the same frame as Data starting at 3 then use TCod[2]
 
-      if(i<MODEL_LEN[m]) {
-	noncoding = get_prob_of_window2(i-1,NMODEL[m],Data+1);
+      if(i<MODEL_LEN[m]) { // typically this is 6; noncoding is the probability of predicting base Data[i] under the non-coding ICM model
+    	  noncoding = get_prob_of_window2(i-1,NMODEL[m],Data+1); // first order markov model if I don't have enough bases before
       }
       else {
-	noncoding = get_prob_of_window1(i-MODEL_LEN[m]+1,NMODEL[m],Data);
+    	  noncoding = get_prob_of_window1(i-MODEL_LEN[m]+1,NMODEL[m],Data); // use ICM model
       }
       if(noncoding==0) noncoding=0.00001; // take a very low probability
 
-      for(j=0;j<3;j++)
-	if(i>j) {
+      for(j=0;j<3;j++) // coding scores are computed in each reading frame
+    	  if(i>j) {
 
-	  if(i>=j+MODEL_LEN[m]) {
-	    model = (int)(i-MODEL_LEN[m]-j)%3;
-	    coding = get_prob_of_window1(i-MODEL_LEN[m]+1,MODEL[m][model],Data);
-	  }
-	  else {
-	    model = ((int)(i-j-1)%3 +1)%3;
-	    coding = get_prob_of_window2(i-j-1,MODEL[m][model],Data+j+1);
-	  }
-	  if(coding==0) coding=0.00001; // take a very low probability
+    		  if(i>=j+MODEL_LEN[m]) {
+    			  model = (int)(i-MODEL_LEN[m]-j)%3; // model gives me the actual frame to use
+    			  coding = get_prob_of_window1(i-MODEL_LEN[m]+1,MODEL[m][model],Data);
+    		  }
+    		  else {
+    			  model = ((int)(i-j-1)%3 +1)%3;
+    			  coding = get_prob_of_window2(i-j-1,MODEL[m][model],Data+j+1);
+    		  }
+    		  if(coding==0) coding=0.00001; // take a very low probability
 
-	  TCod[m][j][i]=PDom[m][j][i]+TCod[m][j][i-1]+log2(coding)-log2(noncoding);
-	  //Cod[j][i]=Cod[j][i-1]+0.5*log2(coding)-log2(noncoding); //if using DT
+    		  TCod[m][j][i]=PDom[m][j][i]+TCod[m][j][i-1]+log2(coding)-log2(noncoding);
+    		  //Cod[j][i]=Cod[j][i-1]+0.5*log2(coding)-log2(noncoding); //if using DT
 
-	}
-	else { TCod[m][j][i]=0; }
+    	  }
+    	  else { TCod[m][j][i]=0; }
 
       //printf("%d %c %f %f %f %f\n",i,Data[i],Cod[0][i],Cod[1][i],Cod[2][i],noncoding);
     }
@@ -1355,64 +1329,62 @@ Site **graph ( char *PData,long int PData_Len,char *TRAIN_DIR, long int *splices
 
     if(i<Data_Len-1 && Data[i]=='a' && Data[i+1]=='t' && Data[i+2]=='g') { // Deal w/ start sites
 
-      if(isatg==2) {
-	if(i>80 && i<=Data_Len-81) {
-	  k=0;
-	  for(j=i-80;j<i+82;j++){
-	    switch (Data[j]){
-	    case 'a': B[k]=0;break;
-	    case 'c': B[k]=1;break;
-	    case 'g': B[k]=2;break;
-	    case 't': B[k]=3;break;
-	    }
-	    k++;
-	  }
+      if(isatg==2) { // not common : this model also evaluates coding potential around ATG start site
+    	  if(i>80 && i<=Data_Len-81) { // consider a window of 160bp around ATG
+    		  k=0;
+    		  for(j=i-80;j<i+82;j++){
+    			  switch (Data[j]){ // translate sequence into integers
+    			  case 'a': B[k]=0;break;
+    			  case 'c': B[k]=1;break;
+    			  case 'g': B[k]=2;break;
+    			  case 't': B[k]=3;break;
+    			  }
+    			  k++;
+    		  }
 
-	  ret=Is_Atg162(B,&score,Atg_Thr,TRAIN_DIR,md);
-	  if(score>=Atg_Thr) {
-	    SST[0][ssFno].type=1;
-	    SST[0][ssFno].poz=i;
-	    SST[0][ssFno].score=score;
-	    ssFno++;
-	  }
+    		  ret=Is_Atg162(B,&score,Atg_Thr,TRAIN_DIR,md);
+    		  if(score>=Atg_Thr) { // found ATG that scores above threshold
+    			  SST[0][ssFno].type=1;
+    			  SST[0][ssFno].poz=i;
+    			  SST[0][ssFno].score=score;
+    			  ssFno++;
+    		  }
 
-	}
-	else {
-	  SST[0][ssFno].score=NO_SCORE;
-	  SST[0][ssFno].type=1;
-	  SST[0][ssFno].poz=i;
-	  ssFno++;
-	}
-
+    	  }
+    	  else { // ATG is at beginning or end of sequence; ATG is not scored -> avoid not making ATG predictions by making sure that the sequence sent to the scoring function has more than 80bp from the beginning/end of the region considered for scoring
+    		  SST[0][ssFno].score=NO_SCORE;
+    		  SST[0][ssFno].type=1;
+    		  SST[0][ssFno].poz=i;
+    		  ssFno++;
+    	  }
       }
-      else {
-	if(i>12 && i<=Data_Len-6) {
-	  k=0;
-	  for(j=i-12;j<i+7;j++) {
-	    switch (Data[j]){
-	    case 'a': B[k]=0;break;
-	    case 'c': B[k]=1;break;
-	    case 'g': B[k]=2;break;
-	    case 't': B[k]=3;break;
-	    }
-	    k++;
-	  }
-	  ret=Is_Atg(B,&score,Atg_Thr,TRAIN_DIR,md);
-	  if(score>=Atg_Thr) {
-	    SST[0][ssFno].type=1;
-	    SST[0][ssFno].poz=i;
-	    SST[0][ssFno].score=score;
-	    ssFno++;
-	  }
-	}
-	else {
-	  SST[0][ssFno].score=NO_SCORE;
-	  SST[0][ssFno].type=1;
-	  SST[0][ssFno].poz=i;
-	  ssFno++;
-	}
+      else { // for all other training cases just use a WAM to score the window (-12,6) around the ATG
+    	  if(i>12 && i<=Data_Len-6) {
+    		  k=0;
+    		  for(j=i-12;j<i+7;j++) {
+    			  switch (Data[j]){
+    			  case 'a': B[k]=0;break;
+    			  case 'c': B[k]=1;break;
+    			  case 'g': B[k]=2;break;
+    			  case 't': B[k]=3;break;
+    			  }
+    			  k++;
+    		  }
+    		  ret=Is_Atg(B,&score,Atg_Thr,TRAIN_DIR,md);
+    		  if(score>=Atg_Thr) { // remember ATG start if bigger than threshold
+    			  SST[0][ssFno].type=1;
+    			  SST[0][ssFno].poz=i;
+    			  SST[0][ssFno].score=score;
+    			  ssFno++;
+    		  }
+    	  }
+    	  else {
+    		  SST[0][ssFno].score=NO_SCORE;
+    		  SST[0][ssFno].type=1;
+    		  SST[0][ssFno].poz=i;
+    		  ssFno++;
+    	  }
       }
-
     }
 
     /* gt's : 1 */
@@ -1420,58 +1392,58 @@ Site **graph ( char *PData,long int PData_Len,char *TRAIN_DIR, long int *splices
     if(i<Data_Len && Data[i]=='g' && Data[i+1]=='t') { // Deal with donors
 
       if(i>80 && i<=Data_Len-81) {
-	k=0;
-	for(j=i-80;j<i+82;j++){
-	  switch (Data[j]){
-	  case 'a': B[k]=0;break;
-	  case 'c': B[k]=1;break;
-	  case 'g': B[k]=2;break;
-	  case 't': B[k]=3;break;
-	  }
-	  k++;
-	}
+    	  k=0;
+    	  for(j=i-80;j<i+82;j++){ // convert sequence to integers
+    		  switch (Data[j]){
+    		  case 'a': B[k]=0;break;
+    		  case 'c': B[k]=1;break;
+    		  case 'g': B[k]=2;break;
+    		  case 't': B[k]=3;break;
+    		  }
+    		  k++;
+    	  }
 
-	ret=Is_Donor(B,&score,&leaf, Don_Thr, istdon,TRAIN_DIR,nocod,md);
-	motifscore=0;
-	if(score>=Don_Thr) motifscore=1;
+    	  ret=Is_Donor(B,&score,&leaf, Don_Thr, istdon,TRAIN_DIR,nocod,md); // score donor site
+    	  motifscore=0;
+    	  if(score>=Don_Thr) motifscore=1;
 
-	if(motifscore && esed) {
-	  for(l=0;l<featnod-1;l++) maxmotif[l]=-10000;
+    	  if(motifscore && esed) { // use ESE motifs to score donor -> not common
+    		  for(l=0;l<featnod-1;l++) maxmotif[l]=-10000;
 
-	  motifscore=Wd[1]*scale(score,scaledatad,begscaled,endscaled,MaxSd[0],MinSd[0])-Wd[0];
+    		  motifscore=Wd[1]*scale(score,scaledatad,begscaled,endscaled,MaxSd[0],MinSd[0])-Wd[0];
 
-	  for(k=82;k<82+flanklend-motiflend;k++)
-	    for(l=0;l<featnod-1;l++) {
-	      prob=0;
-	      for(ti=0;ti<motiflend;ti++) {
-		if(Md[l][B[k+ti]*motiflend+ti]!=0) {
-		  prob+=Md[l][B[k+ti]*motiflend+ti]*log(Md[l][B[k+ti]*motiflend+ti]/Bgd[B[k+ti]]/log(2));
-		}
-	      }
-	      if(prob>maxmotif[l]) maxmotif[l]=prob;
-	    }
+    		  for(k=82;k<82+flanklend-motiflend;k++)
+    			  for(l=0;l<featnod-1;l++) {
+    				  prob=0;
+    				  for(ti=0;ti<motiflend;ti++) {
+    					  if(Md[l][B[k+ti]*motiflend+ti]!=0) {
+    						  prob+=Md[l][B[k+ti]*motiflend+ti]*log(Md[l][B[k+ti]*motiflend+ti]/Bgd[B[k+ti]]/log(2));
+    					  }
+    				  }
+    				  if(prob>maxmotif[l]) maxmotif[l]=prob;
+    			  }
 
-	  for(l=0;l<featnod-1;l++)
-	    motifscore+=Wd[l+2]*scale(maxmotif[l],scaledatad,begscaled,endscaled,MaxSd[l+1],MinSd[l+1]);
+    		  for(l=0;l<featnod-1;l++)
+    			  motifscore+=Wd[l+2]*scale(maxmotif[l],scaledatad,begscaled,endscaled,MaxSd[l+1],MinSd[l+1]);
 
-	  if(leafnod) {
-	    motifscore+=Wd[leaf+featnod+1];
-	  }
+    		  if(leafnod) {
+    			  motifscore+=Wd[leaf+featnod+1];
+    		  }
 
-	}
+    	  }
 
-	if(motifscore>0) {
-	  SST[0][ssFno].type=2;
-	  SST[0][ssFno].poz=i;
-	  SST[0][ssFno].score=score;
-	  ssFno++;
-	}
+    	  if(motifscore>0) { // if donor found -> store it in forward array
+    		  SST[0][ssFno].type=2;
+    		  SST[0][ssFno].poz=i;
+    		  SST[0][ssFno].score=score;
+    		  ssFno++;
+    	  }
       }
-      else {
-	SST[0][ssFno].score=NO_SCORE;
-	SST[0][ssFno].type=2;
-	SST[0][ssFno].poz=i;
-	ssFno++;
+      else { // if there is not enough context sequence than donor doesn't get scored -> make sure that there is!
+    	  SST[0][ssFno].score=NO_SCORE;
+    	  SST[0][ssFno].type=2;
+    	  SST[0][ssFno].poz=i;
+    	  ssFno++;
       }
 
 
@@ -1479,72 +1451,72 @@ Site **graph ( char *PData,long int PData_Len,char *TRAIN_DIR, long int *splices
 
     /* ag's : 2 */
 
-    if(i<Data_Len && Data[i]=='a' && Data[i+1]=='g') { // Deal with acceptors
+    if(i<Data_Len && Data[i]=='a' && Data[i+1]=='g') { // Deal with acceptors -- same way as for donors
 
 
       if(i>80 && i<=Data_Len-81) {
-	k=0;
-	for(j=i-80;j<i+82;j++){
-	  switch (Data[j]){
-	  case 'a': B[k]=0;break;
-	  case 'c': B[k]=1;break;
-	  case 'g': B[k]=2;break;
-	  case 't': B[k]=3;break;
-	  }
-	  k++;
-	}
+    	  k=0;
+    	  for(j=i-80;j<i+82;j++){
+    		  switch (Data[j]){
+    		  case 'a': B[k]=0;break;
+    		  case 'c': B[k]=1;break;
+    		  case 'g': B[k]=2;break;
+    		  case 't': B[k]=3;break;
+    		  }
+    		  k++;
+    	  }
 
-	ret=Is_Acceptor(B,&score, &leaf,Acc_Thr, istacc,TRAIN_DIR,nocod,md);
+    	  ret=Is_Acceptor(B,&score, &leaf,Acc_Thr, istacc,TRAIN_DIR,nocod,md);
 
-	motifscore=0;
-	if(score>=Acc_Thr) motifscore=1;
+    	  motifscore=0;
+    	  if(score>=Acc_Thr) motifscore=1;
 
-	if(motifscore && esea) {
-	  for(l=0;l<featnoa-1;l++) maxmotif[l]=-10000;
+    	  if(motifscore && esea) { // ESE motifs used for scoring: not common
+    		  for(l=0;l<featnoa-1;l++) maxmotif[l]=-10000;
 
-	  motifscore=Wa[1]*scale(score,scaledataa,begscalea,endscalea,MaxSa[0],MinSa[0])-Wa[0];
+    		  motifscore=Wa[1]*scale(score,scaledataa,begscalea,endscalea,MaxSa[0],MinSa[0])-Wa[0];
 
-	  for(k=82;k<82+flanklena-motiflena;k++)
-	    for(l=0;l<featnoa-1;l++) {
-	      prob=0;
-	      for(ti=0;ti<motiflena;ti++) {
-		if(Ma[l][B[k+ti]*motiflena+ti]!=0) {
-		  prob+=Ma[l][B[k+ti]*motiflena+ti]*log(Ma[l][B[k+ti]*motiflena+ti]/Bga[B[k+ti]]/log(2));
-		}
-	      }
-	      if(prob>maxmotif[l]) maxmotif[l]=prob;
-	    }
+    		  for(k=82;k<82+flanklena-motiflena;k++)
+    			  for(l=0;l<featnoa-1;l++) {
+    				  prob=0;
+    				  for(ti=0;ti<motiflena;ti++) {
+    					  if(Ma[l][B[k+ti]*motiflena+ti]!=0) {
+    						  prob+=Ma[l][B[k+ti]*motiflena+ti]*log(Ma[l][B[k+ti]*motiflena+ti]/Bga[B[k+ti]]/log(2));
+    					  }
+    				  }
+    				  if(prob>maxmotif[l]) maxmotif[l]=prob;
+    			  }
 
-	  for(l=0;l<featnoa-1;l++)
-	    motifscore+=Wa[l+2]*scale(maxmotif[l],scaledataa,begscalea,endscalea,MaxSa[l+1],MinSa[l+1]);
+    		  for(l=0;l<featnoa-1;l++)
+    			  motifscore+=Wa[l+2]*scale(maxmotif[l],scaledataa,begscalea,endscalea,MaxSa[l+1],MinSa[l+1]);
 
-	  if(leafnoa) {
-	    motifscore+=Wa[leaf+featnoa+1];
-	  }
+    		  if(leafnoa) {
+    			  motifscore+=Wa[leaf+featnoa+1];
+    		  }
 
-	  //	  printf("Acceptor %d %d : score=%f leaf=%d motifscore=%f Wa[0]=%f Wa[1]=%f maxmotif[0]=%f begscalea=%d endscalea=%d\n",i,i+1,score,leaf,motifscore,Wa[0],Wa[1],maxmotif[0],begscalea,endscalea);
-
-
-	}
+    		  //	  printf("Acceptor %d %d : score=%f leaf=%d motifscore=%f Wa[0]=%f Wa[1]=%f maxmotif[0]=%f begscalea=%d endscalea=%d\n",i,i+1,score,leaf,motifscore,Wa[0],Wa[1],maxmotif[0],begscalea,endscalea);
 
 
-	if(motifscore>0) {
-	  SST[0][ssFno].type=3;
-	  SST[0][ssFno].poz=i;
-	  SST[0][ssFno].score=score;
-	  ssFno++;
-	}
+    	  }
+
+
+    	  if(motifscore>0) { // store acceptore if above threshold; note if ESE were used they do not modify score
+    		  SST[0][ssFno].type=3;
+    		  SST[0][ssFno].poz=i;
+    		  SST[0][ssFno].score=score;
+    		  ssFno++;
+    	  }
       }
       else {
-	SST[0][ssFno].score=NO_SCORE;
-	SST[0][ssFno].type=3;
-	SST[0][ssFno].poz=i;
-	ssFno++;
+    	  SST[0][ssFno].score=NO_SCORE;
+    	  SST[0][ssFno].type=3;
+    	  SST[0][ssFno].poz=i;
+    	  ssFno++;
       }
 
     }
 
-    /* stop codons : 3 */
+    /* stop codons : 3 */ // these are treated just like the ATGs
 
     if( i < Data_Len-1 && ((onlytga && (Data[i]=='t' && Data[i+1]=='g' && Data[i+2]=='a'))
 			   ||(onlytaa && (Data[i]=='t' && Data[i+1]=='a' && Data[i+2]=='a'))
@@ -1559,42 +1531,42 @@ Site **graph ( char *PData,long int PData_Len,char *TRAIN_DIR, long int *splices
       SST[0][ssFno].score=NO_SCORE;
 
 
-      if(isstop==2) {
-	if(i>80 && i<=Data_Len-81) {
-	  k=0;
-	  for(j=i-80;j<i+82;j++){
-	    switch (Data[j]){
-	    case 'a': B[k]=0;break;
-	    case 'c': B[k]=1;break;
-	    case 'g': B[k]=2;break;
-	    case 't': B[k]=3;break;
-	    }
-	    k++;
-	  }
+      if(isstop==2) { // not common -- I might need to re-evaluate this
+    	  if(i>80 && i<=Data_Len-81) {
+    		  k=0;
+    		  for(j=i-80;j<i+82;j++){
+    			  switch (Data[j]){
+    			  case 'a': B[k]=0;break;
+    			  case 'c': B[k]=1;break;
+    			  case 'g': B[k]=2;break;
+    			  case 't': B[k]=3;break;
+    			  }
+    			  k++;
+    		  }
 
-	  ret=Is_Stop162(B,&score,Stop_Thr,TRAIN_DIR,md);
-	  if(score>=Stop_Thr) {
-	    SST[0][ssFno].score=score;
-	  }
+    		  ret=Is_Stop162(B,&score,Stop_Thr,TRAIN_DIR,md);
+    		  if(score>=Stop_Thr) {
+    			  SST[0][ssFno].score=score;
+    		  }
 
-	}
+    	  }
       }
-      else {
-	if(i>4 && i<=Data_Len-14) {
-	  k=0;
-	  for(j=i-4;j<i+15;j++) {
-	    switch (Data[j]){
-	    case 'a': B[k]=0;break;
-	    case 'c': B[k]=1;break;
-	    case 'g': B[k]=2;break;
-	    case 't': B[k]=3;break;
-	    }
-	    k++;
-	  }
+      else { // no coding potential is evaluated around the stop codon
+    	  if(i>4 && i<=Data_Len-14) {
+    		  k=0;
+    		  for(j=i-4;j<i+15;j++) {
+    			  switch (Data[j]){
+    			  case 'a': B[k]=0;break;
+    			  case 'c': B[k]=1;break;
+    			  case 'g': B[k]=2;break;
+    			  case 't': B[k]=3;break;
+    			  }
+    			  k++;
+    		  }
 
-	  ret=Is_Stop(B,&score,Stop_Thr,TRAIN_DIR,md);
-	  SST[0][ssFno].score=score;
-	}
+    		  ret=Is_Stop(B,&score,Stop_Thr,TRAIN_DIR,md);
+    		  SST[0][ssFno].score=score;
+    	  }
       }
       //else SST[0][ssFno].score=NO_SCORE;
 
@@ -1606,11 +1578,11 @@ Site **graph ( char *PData,long int PData_Len,char *TRAIN_DIR, long int *splices
   //exit(0);
 
 
-  /* reverse strand */
+  /* reverse strand */ // same as for forward strand -> a smarter way would use a function here instead
 
   ssRno=0;
 
-  char *Copy=NULL;
+  char *Copy=NULL; // Copy reverses the Data sequence
 
   Copy=(char *) malloc((Data_Len+2)*sizeof(char));
   if (Copy == NULL) {
@@ -1957,7 +1929,7 @@ Site **graph ( char *PData,long int PData_Len,char *TRAIN_DIR, long int *splices
     }
   }
 
-  if(Use_Filter) {
+  if(Use_Filter) { // not common
     // filter acceptor & donor sites
 
     for(i=0; i<ssFno;i++)
@@ -2027,7 +1999,7 @@ Site **graph ( char *PData,long int PData_Len,char *TRAIN_DIR, long int *splices
     abort();
   }
 
-
+  // put all splice sites in a single array; reverse strand SS have negative types
   SS[0].type=0;
   SS[0].poz=0;
   SS[0].score=NO_SCORE;
@@ -2075,14 +2047,14 @@ Site **graph ( char *PData,long int PData_Len,char *TRAIN_DIR, long int *splices
   for(i=0;i<2;i++) if(SST[i] != NULL ) free(SST[i]);
 
 
-  // here compute Cod[]
+  // here compute Cod[]; stores cumultative scores between splice sites -> no need to store it at each position in the sequence since I will not use them
   for(m=0;m<MODEL_NO;m++)
     for(i=0;i<3;i++) {
       Cod[m][i]=NULL;
       Cod[m][i]=(double *) malloc(ssno*sizeof(double));
       if (Cod[m][i] == NULL) {
-	fprintf(stderr,"Memory allocation for coding %ld failure.\n",i);
-	abort();
+    	  fprintf(stderr,"Memory allocation for coding %ld failure.\n",i);
+    	  abort();
       }
     }
 
@@ -2091,113 +2063,33 @@ Site **graph ( char *PData,long int PData_Len,char *TRAIN_DIR, long int *splices
       k=SS[i].type;
       switch (k) {
       case 0: // start and stop of sequence
-	if(i==0) { // beginning of sequence: store the cumulative score from reverse strand
-	  for(m=0;m<MODEL_NO;m++)  Cod[m][j][0]=TCod[m][3+j][Data_Len];
-	}
-	else { // end of sequence (i==ssno-1) : store the cumulative score from forward strand
-	  for(m=0;m<MODEL_NO;m++) Cod[m][j][ssno-1]=TCod[m][j][Data_Len];
-	}
-	break;
-      case 1: // ATG
-      case 2: // GT
-      case 4: // TAG|TAA|TGA
-	for(m=0;m<MODEL_NO;m++) Cod[m][j][i]=TCod[m][j][SS[i].poz-1];
-	break;
-      case 3: // AG
-	for(m=0;m<MODEL_NO;m++) Cod[m][j][i]=TCod[m][j][SS[i].poz+1];
-	break;
-      case -1: // ATG
-      case -2: // GT
-      case -4: // TAG|TAA|TGA
-	for(m=0;m<MODEL_NO;m++) Cod[m][j][i]=TCod[m][3+j][Data_Len-SS[i].poz];
-	break;
-      case -3: // AG
-	for(m=0;m<MODEL_NO;m++) Cod[m][j][i]=TCod[m][3+j][Data_Len-SS[i].poz+2];
-	break;
-      }
+    	  if(i==0) { // beginning of sequence: store the cumulative score from reverse strand
+    		  for(m=0;m<MODEL_NO;m++)  Cod[m][j][0]=TCod[m][3+j][Data_Len];
+    	  }
+    	  else { // end of sequence (i==ssno-1) : store the cumulative score from forward strand
+    		  for(m=0;m<MODEL_NO;m++) Cod[m][j][ssno-1]=TCod[m][j][Data_Len];
+    	  }
+    	  break;
+      	  case 1: // ATG
+      	  case 2: // GT
+      	  case 4: // TAG|TAA|TGA
+      		  for(m=0;m<MODEL_NO;m++) Cod[m][j][i]=TCod[m][j][SS[i].poz-1];
+      		  break;
+      	  case 3: // AG
+      		  for(m=0;m<MODEL_NO;m++) Cod[m][j][i]=TCod[m][j][SS[i].poz+1];
+      		  break;
+      	  case -1: // ATG
+      	  case -2: // GT
+      	  case -4: // TAG|TAA|TGA
+      		  for(m=0;m<MODEL_NO;m++) Cod[m][j][i]=TCod[m][3+j][Data_Len-SS[i].poz];
+      		  break;
+      	  case -3: // AG
+      		  for(m=0;m<MODEL_NO;m++) Cod[m][j][i]=TCod[m][3+j][Data_Len-SS[i].poz+2];
+      		  break;
+      	  }
 
     }
 
-  /*
-  for(i=0;i<ssno;i++) {
-    if(SS[i].type>0) {
-      double left;
-      double right;
-      int kprev;
-      int ind;
-      //      printf("%d: %f %f %f\n",i,Cod[0][i],Cod[1][i],Cod[2][i]);
-      for(j=0;j<3;j++) {
-	switch (SS[i].type) {
-	case 1:
-	case 3:
-	  left=0;
-	  right=0;
-	  k=i+1;
-	  kprev=i;
-	  ind=1;
-	  while(k<ssno && ind) {
-	    if(SS[k].type>0) {
-	      if(Cod[j][k]>=Cod[j][kprev]) {
-		right+=Cod[j][k]-Cod[j][kprev];
-		kprev=k;
-	      }
-	      else { ind=0;}
-	    }
-	    k++;
-	  }
-	  k=i-1;
-	  kprev=i;
-	  ind=1;
-	  while(k>0 && ind) {
-	    if(SS[k].type>0) {
-	      if(Cod[j][k]>=Cod[j][kprev]) {
-		left+=Cod[j][k]-Cod[j][kprev];
-		kprev=k;
-	      }
-	      else { ind=0;}
-	    }
-	    k--;
-	  }
-	  break;
-	case 2:
-	case 4:
-	  left=0;
-	  right=0;
-	  k=i+1;
-	  kprev=i;
-	  ind=1;
-	  while(k<ssno && ind) {
-	    if(SS[k].type>0) {
-	      if(Cod[j][k]<=Cod[j][kprev]) {
-		right+=Cod[j][kprev]-Cod[j][k];
-		kprev=k;
-	      }
-	      else { ind=0;}
-	    }
-	    k++;
-	  }
-	  k=i-1;
-	  kprev=i;
-	  ind=1;
-	  while(k>0 && ind) {
-	    if(SS[k].type>0) {
-	      if(Cod[j][k]<=Cod[j][kprev]) {
-		left+=Cod[j][kprev]-Cod[j][k];
-		kprev=k;
-	      }
-	      else { ind=0;}
-	    }
-	    k--;
-	  }
-	  break;
-	}
-	printf("%d %d %f %f %f %f\n",SS[i].poz,SS[i].type,SS[i].score,left,right,Cod[j][i]);
-      }
-    }
-
-  }
-  exit(0);
-  */
 
   // free temporary coding arrays TCod
   for(m=0;m<MODEL_NO;m++)
@@ -2206,125 +2098,126 @@ Site **graph ( char *PData,long int PData_Len,char *TRAIN_DIR, long int *splices
       if(PDom[m][i] != NULL ) free(PDom[m][i]);
     }
 
-  // load exon no distr file
-  strcpy(File_Name,TRAIN_DIR);
-  strcat(File_Name,EXONNO_DISTR);
-  fp = fopen (File_Name, "r");
-  if  (fp == NULL)
-    {
-      fprintf (stderr, "ERROR 8:  Unable to open file %s\n", File_Name);
-      exit (0);
-    }
-
-  fgets (Line, MAX_LINE, fp);
-  sscanf(Line,"%d",&ExNo);
-
   ExDistr=NULL;
-  ExDistr=(double *) malloc((ExNo+1)*sizeof(double));
-  if (ExDistr == NULL) {
-    fprintf(stderr,"Memory allocation for no of exons distribution failure.\n");
-    abort();
-  }
+  if(Use_Exon_Count) { // not common
+	  // load exon no distr file - not common
+	  strcpy(File_Name,TRAIN_DIR);
+	  strcat(File_Name,EXONNO_DISTR);
+	  fp = fopen (File_Name, "r");
+	  if  (fp == NULL)
+	  {
+		  fprintf (stderr, "ERROR 8:  Unable to open file %s\n", File_Name);
+		  exit (0);
+	  }
 
-  if(Use_Exon_Count) {
-    ExTail=NULL;
-    ExTail=(double *) malloc((ExNo+1)*sizeof(double));
-    if (ExTail == NULL) {
-      fprintf(stderr,"Memory allocation for tail no of exons distribution failure.\n");
-      abort();
-    }
-  }
+	  fgets (Line, MAX_LINE, fp);
+	  sscanf(Line,"%d",&ExNo);
 
-  for(i=0;i<=ExNo;i++) {
-    fscanf(fp,"%f",&readval);
-    if (readval < 0.000001) readval = 0.000001;
-    ExDistr[i]=readval;
-  }
 
-  fclose(fp);
+	  ExDistr=(double *) malloc((ExNo+1)*sizeof(double));
+	  if (ExDistr == NULL) {
+		  fprintf(stderr,"Memory allocation for no of exons distribution failure.\n");
+		  abort();
+	  }
 
-  if(Use_Exon_Count) {
-    ExTail[0]=1;
-    ExTail[ExNo]=ExDistr[ExNo];
-    for(i=ExNo-1;i>0;i--) {
-      ExTail[i]=ExDistr[i]+ExTail[i+1];
-    }
+
+	  ExTail=NULL;
+	  ExTail=(double *) malloc((ExNo+1)*sizeof(double));
+	  if (ExTail == NULL) {
+		  fprintf(stderr,"Memory allocation for tail no of exons distribution failure.\n");
+		  abort();
+	  }
+
+
+	  for(i=0;i<=ExNo;i++) {
+		  fscanf(fp,"%f",&readval);
+		  if (readval < 0.000001) readval = 0.000001;
+		  ExDistr[i]=readval;
+	  }
+
+	  fclose(fp);
+
+	  ExTail[0]=1;
+	  ExTail[ExNo]=ExDistr[ExNo];
+	  for(i=ExNo-1;i>0;i--) {
+		  ExTail[i]=ExDistr[i]+ExTail[i+1];
+	  }
   }
 
 
   for(m=0;m<MODEL_NO;m++) {
 
-    // load exon distr file
+    // load exon distr file -> probability of observing an exon with a given length
 
     strcpy(File_Name,TRAIN_DIR);
     strcat(File_Name,EXON_DISTR[m]);
     fp = fopen (File_Name, "r");
     if  (fp == NULL)
       {
-	fprintf (stderr, "ERROR 9:  Unable to open file %s\n", File_Name);
-	exit (0);
+    	fprintf (stderr, "ERROR 9:  Unable to open file %s\n", File_Name);
+    	exit (0);
       }
 
     while(fgets (Line, MAX_LINE, fp) != NULL) {
       if(strncmp(Line,"Initial",7)==0) {
-	sscanf(Line,"%*s %d",&ret);
-	LenDistr[m][0]=NULL;
-	LenDistr[m][0]=(double *) malloc(ret*sizeof(double));
-	if (LenDistr[m][0] == NULL) {
-	  fprintf(stderr,"Memory allocation for initial exon length distribution failure.\n");
-	  abort();
-	}
-	LenNo[m][0]=ret;
-	for(i=0;i<LenNo[m][0];i++) {
-	  fscanf(fp,"%f",&readval);
-	  if (readval < 0.000001) readval = 0.000001;
-	  LenDistr[m][0][i]=boostdistr[m]+readval;
-	}
+    	  sscanf(Line,"%*s %d",&ret); // how many lengths we observed
+    	  LenDistr[m][0]=NULL;
+    	  LenDistr[m][0]=(double *) malloc(ret*sizeof(double));
+    	  if (LenDistr[m][0] == NULL) {
+    		  fprintf(stderr,"Memory allocation for initial exon length distribution failure.\n");
+    		  abort();
+    	  }
+    	  LenNo[m][0]=ret;
+    	  for(i=0;i<LenNo[m][0];i++) {
+    		  fscanf(fp,"%f",&readval);
+    		  if (readval < 0.000001) readval = 0.000001;
+    		  LenDistr[m][0][i]=boostdistr[m]+readval;
+    	  }
       }
       else if(strncmp(Line,"Internal",8)==0) {
-	sscanf(Line,"%*s %d",&ret);
-	LenDistr[m][1]=NULL;
-	LenDistr[m][1]=(double *) malloc(ret*sizeof(double));
-	if (LenDistr[m][1] == NULL) {
-	  fprintf(stderr,"Memory allocation for internal exon length distribution failure.\n");
-	  abort();
-	}
-	LenNo[m][1]=ret;
-	for(i=0;i<LenNo[m][1];i++) {
-	  fscanf(fp,"%f",&readval);
-	  if (readval < 0.000001) readval = 0.000001;
-	  LenDistr[m][1][i]=boostdistr[m]+readval;
-	}
+    	  sscanf(Line,"%*s %d",&ret);
+    	  LenDistr[m][1]=NULL;
+    	  LenDistr[m][1]=(double *) malloc(ret*sizeof(double));
+    	  if (LenDistr[m][1] == NULL) {
+    		  fprintf(stderr,"Memory allocation for internal exon length distribution failure.\n");
+    		  abort();
+    	  }
+    	  LenNo[m][1]=ret;
+    	  for(i=0;i<LenNo[m][1];i++) {
+    		  fscanf(fp,"%f",&readval);
+    		  if (readval < 0.000001) readval = 0.000001;
+    		  LenDistr[m][1][i]=boostdistr[m]+readval;
+    	  }
       }
       else if(strncmp(Line,"Terminal",8)==0) {
-	sscanf(Line,"%*s %d",&ret);
-	LenDistr[m][2]=NULL;
-	LenDistr[m][2]=(double *) malloc(ret*sizeof(double));
-	if (LenDistr[m][2] == NULL) {
-	  fprintf(stderr,"Memory allocation for terminal exon length distribution failure.\n");
-	  abort();
-	}
-	LenNo[m][2]=ret;
-	for(i=0;i<LenNo[m][2];i++) {
-	  fscanf(fp,"%f",&readval);
-	  if (readval < 0.000001) readval = 0.000001;
-	  LenDistr[m][2][i]=boostdistr[m]+readval;
-	}
+    	  sscanf(Line,"%*s %d",&ret);
+    	  LenDistr[m][2]=NULL;
+    	  LenDistr[m][2]=(double *) malloc(ret*sizeof(double));
+    	  if (LenDistr[m][2] == NULL) {
+    		  fprintf(stderr,"Memory allocation for terminal exon length distribution failure.\n");
+    		  abort();
+    	  }
+    	  LenNo[m][2]=ret;
+    	  for(i=0;i<LenNo[m][2];i++) {
+    		  fscanf(fp,"%f",&readval);
+    		  if (readval < 0.000001) readval = 0.000001;
+    		  LenDistr[m][2][i]=boostdistr[m]+readval;
+    	  }
       }
       else if(strncmp(Line,"Single",6)==0) {
-	sscanf(Line,"%*s %d",&ret);
-	LenDistr[m][3]=NULL;
-	LenDistr[m][3]=(double *) malloc(ret*sizeof(double));
-	if (LenDistr[m][3] == NULL) {
-	  fprintf(stderr,"Memory allocation for single exon length distribution failure.\n");
-	  abort();
-	}
-	LenNo[m][3]=ret;
-	for(i=0;i<LenNo[m][3];i++) {
-	  fscanf(fp,"%f",&readval);
-	  if (readval < 0.000001) readval = 0.000001;
-	  LenDistr[m][3][i]=boostdistr[m]+readval;
-	}
+    	  sscanf(Line,"%*s %d",&ret);
+    	  LenDistr[m][3]=NULL;
+    	  LenDistr[m][3]=(double *) malloc(ret*sizeof(double));
+    	  if (LenDistr[m][3] == NULL) {
+    		  fprintf(stderr,"Memory allocation for single exon length distribution failure.\n");
+    		  abort();
+    	  }
+    	  LenNo[m][3]=ret;
+    	  for(i=0;i<LenNo[m][3];i++) {
+    		  fscanf(fp,"%f",&readval);
+    		  if (readval < 0.000001) readval = 0.000001;
+    		  LenDistr[m][3][i]=boostdistr[m]+readval;
+    	  }
       }
     }
 
@@ -2336,16 +2229,16 @@ Site **graph ( char *PData,long int PData_Len,char *TRAIN_DIR, long int *splices
       LenDistr[m][i]=(double *) malloc(4*sizeof(double)); // first two are normal probabilities (1=stop; 2 =continue);
       // last two are log probabilities
       if (LenDistr[m][i] == NULL) {
-	fprintf(stderr,"Memory allocation for noncoding length distribution failure.\n");
-	abort();
+    	  fprintf(stderr,"Memory allocation for noncoding length distribution failure.\n");
+    	  abort();
       }
     }
 
     // intron
-    LenDistr[m][4][0]=1/(mintron[m]+1);
+    LenDistr[m][4][0]=1/(mintron[m]+1); // probability to generate an intron base
 
     // intergenic
-    LenDistr[m][5][0]=1/(minterg[m]+m5utr[m]+m3utr[m]+1);
+    LenDistr[m][5][0]=1/(minterg[m]+m5utr[m]+m3utr[m]+1); // probability to generate an intergenic base
 
     for(i=4;i<6;i++) {
       LenDistr[m][i][1]=1-LenDistr[m][i][0];
@@ -2355,7 +2248,7 @@ Site **graph ( char *PData,long int PData_Len,char *TRAIN_DIR, long int *splices
     }
   }
 
-  // load signalp matrix
+  // load signalp matrix - not common
 
   if(ifSP) { // there is a signalp file in the data
     strcpy(File_Name,TRAIN_DIR);
@@ -2377,9 +2270,9 @@ Site **graph ( char *PData,long int PData_Len,char *TRAIN_DIR, long int *splices
 
   // alloc sites memory and init sites
 
-  iinterg+=i5utr+i3utr;
+  iinterg+=i5utr+i3utr; // probability to start in an intergenic region
 
-  for(val=INTERG; val<= I2MINUS; val++) {
+  for(val=INTERG; val<= I2MINUS; val++) { // set up the trellis (only for noncoding states)
     Sites[val] = NULL;
     Sites[val] = (Site *) malloc(ssno*sizeof(Site));
     if (Sites[val] == NULL) {
@@ -2389,55 +2282,55 @@ Site **graph ( char *PData,long int PData_Len,char *TRAIN_DIR, long int *splices
     for(j=0;j<ssno;j++) {
       Sites[val][j].score=(double *)malloc(PREDNO*sizeof(double));
       if (Sites[val][j].score == NULL) {
-	fprintf(stderr,"Memory allocation for state sites scores failure.\n");
-	abort();
+    	  fprintf(stderr,"Memory allocation for state sites scores failure.\n");
+    	  abort();
       }
       Sites[val][j].prevpredno=(int *)malloc(PREDNO*sizeof(int));
       if (Sites[val][j].prevpredno == NULL) {
-	fprintf(stderr,"Memory allocation for state sites scores failure.\n");
-	abort();
+    	  fprintf(stderr,"Memory allocation for state sites scores failure.\n");
+    	  abort();
       }
       Sites[val][j].prevstatetype=(int *)malloc(PREDNO*sizeof(int));
       if (Sites[val][j].prevstatetype == NULL) {
-	fprintf(stderr,"Memory allocation for previous state type failure.\n");
-	abort();
+    	  fprintf(stderr,"Memory allocation for previous state type failure.\n");
+    	  abort();
       }
       Sites[val][j].prevstateno=(long int *)malloc(PREDNO*sizeof(long int));
       if (Sites[val][j].prevstateno == NULL) {
-	fprintf(stderr,"Memory allocation for previous state no failure.\n");
-	abort();
+    	  fprintf(stderr,"Memory allocation for previous state no failure.\n");
+    	  abort();
       }
       Sites[val][j].prevex=(struct exon **)malloc(PREDNO*sizeof(struct exon *));
       if (Sites[val][j].prevex == NULL) {
-	fprintf(stderr,"Memory allocation for state sites previous exons failure.\n");
-	abort();
+    	  fprintf(stderr,"Memory allocation for state sites previous exons failure.\n");
+    	  abort();
       }
     }
 
     switch(val) {
     case INTERG:
       for(i=0;i<PREDNO;i++) {
-	Sites[val][0].score[i]=0.5*log2(iinterg/iinterg);
+    	  Sites[val][0].score[i]=0.5*log2(iinterg/iinterg);
       }
       break;
     case I0PLUS:
     case I1PLUS:
     case I2PLUS:
       for(i=0;i<PREDNO;i++) {
-	if(force) {
-	  Sites[val][0].score[i]=-10000;
-	}
-	else Sites[val][0].score[i]=0.5*(log2(iintron/iinterg)+log2(iin[val-1]*3));
+    	  if(force) {
+    		  Sites[val][0].score[i]=-10000; // set a very low probability to start in an intron
+    	  }
+    	  else Sites[val][0].score[i]=0.5*(log2(iintron/iinterg)+log2(iin[val-1]*3));
       }
       break;
     case I0MINUS:
     case I1MINUS:
     case I2MINUS:
       for(i=0;i<PREDNO;i++) {
-	if(force) {
-	  Sites[val][0].score[i]=-10000;
-	}
-	else Sites[val][0].score[i]=0.5*(log2(iintron/iinterg)+log2(iin[val-4]*3));
+    	  if(force) {
+    		  Sites[val][0].score[i]=-10000; // set a very low probability to start in an intron
+    	  }
+    	  else Sites[val][0].score[i]=0.5*(log2(iintron/iinterg)+log2(iin[val-4]*3));
       }
       break;
     }
@@ -2451,7 +2344,7 @@ Site **graph ( char *PData,long int PData_Len,char *TRAIN_DIR, long int *splices
 
   // process strand
 
-  DP(1,ssno-1,PREDNO,force);
+  DP(1,ssno-1,PREDNO,force); // actual dynamic programming computing the maximum scores (Viterbi algorithm)
 
   for(val=I0PLUS; val<=I2MINUS; val++)
     for(i=0;i<PREDNO;i++)
@@ -3266,24 +3159,20 @@ void DP(long int start, long int stop,int PREDNO,int force)
   }
 
 
-  for(i=0;i<6;i++) laststop[i]=0;
+  for(i=0;i<6;i++) laststop[i]=0; // last seen stop in all 6 frames
 
 
-  for(i=start;i<=stop;i++) {
-
-    /*    if(i==stop) {
-      printf("\n");
-      }*/
+  for(i=start;i<=stop;i++) { // for every splice site encounter
 
     for(s=INTERG; s<= I2MINUS; s++)
       for(j=0;j<PREDNO;j++) {
-	Sites[s][i].score[j]=Sites[s][i-1].score[j];
-	if(s==INTERG) Sites[s][i].score[j]=Sites[s][i-1].score[0]; // this is more like an heuristic for longer sequences; doesn't give the perfect answer
-	Sites[s][i].prevex[j]=Sites[s][i-1].prevex[j];
-	Sites[s][i].prevstatetype[j]=Sites[s][i-1].prevstatetype[j];
-	Sites[s][i].prevstateno[j]=Sites[s][i-1].prevstateno[j];
-	Sites[s][i].prevpredno[j]=Sites[s][i-1].prevpredno[j];
-	changed[s][j]=0;
+    	  Sites[s][i].score[j]=Sites[s][i-1].score[j];
+    	  if(s==INTERG) Sites[s][i].score[j]=Sites[s][i-1].score[0]; // always start with the same score for an intergenic state; this is more like an heuristic for longer sequences; doesn't give the perfect answer
+    	  Sites[s][i].prevex[j]=Sites[s][i-1].prevex[j];
+    	  Sites[s][i].prevstatetype[j]=Sites[s][i-1].prevstatetype[j];
+    	  Sites[s][i].prevstateno[j]=Sites[s][i-1].prevstateno[j];
+    	  Sites[s][i].prevpredno[j]=Sites[s][i-1].prevpredno[j];
+    	  changed[s][j]=0;
 
 #ifdef MESSAGE
 	printf("Sites[%d][%d].score=%f poz=%d type=%d score=%f",s,i,Sites[s][i].score[j],SS[i].poz,SS[i].type,SS[i].score);
@@ -3297,37 +3186,37 @@ void DP(long int start, long int stop,int PREDNO,int force)
 
     // forward strand
 
-    if(SS[i].type==4 && SS[i].score>=Stop_Thr) { // stop codon on forw strand at SS[i].poz,SS[i].poz+1,SS[i].poz+2
+    if(SS[i].type==4 && SS[i].score>=Stop_Thr) { // found stop codon on forw strand at SS[i].poz,SS[i].poz+1,SS[i].poz+2
       // go back to score exons
       j=i-1;
-      thisstop=laststop[(SS[i].poz-1)%3];
-      while(j>=0 && j>=thisstop) {
-	if(SS[j].type==1 && SS[j].poz%3 == SS[i].poz%3 && SS[i].poz-SS[j].poz+3 > min_gene_len) { // single exon
+      thisstop=laststop[(SS[i].poz-1)%3]; // get position of last stop codon in the same reading frame
+      while(j>=0 && j>=thisstop) { // scan all splice sites between current stop  and laststop (in thisstop variable)
+    	  if(SS[j].type==1 && SS[j].poz%3 == SS[i].poz%3 && SS[i].poz-SS[j].poz+3 > min_gene_len) { // single exon;
 
-	  for(m=0;m<MODEL_NO;m++) {
-	    newexon[0]=scoresglexon(j,i,1,m);
+    		  for(m=0;m<MODEL_NO;m++) {
+    			  newexon[0]=scoresglexon(j,i,1,m); // score single exon between positions j and i on forward strand for model m (usually one model only)
 
-	    //	  if(newexon[0]->score>0) {
+    			  //	  if(newexon[0]->score>0) {
 
-	    for(k=1;k<PREDNO;k++)
-	      newexon[k]=copyexon(newexon[0]);
+    			  for(k=1;k<PREDNO;k++)
+    				  newexon[k]=copyexon(newexon[0]);
 
-	    for(k=0;k<PREDNO;k++) {
-	      newexon[k]->prev=Sites[INTERG][j].prevex[k];
+    			  for(k=0;k<PREDNO;k++) {
+    				  newexon[k]->prev=Sites[INTERG][j].prevex[k]; // previous exon in intergenic state (a single exon can only follow an intergenic state
 
-	      tempscore = newexon[k]->score + Sites[INTERG][j].score[k];
-	      h=j;
-	      if(intergval[m]) {
-		while(Sites[INTERG][h].prevex[k]!=NULL && newexon[k]->start-Sites[INTERG][h].prevex[k]->stop-1<= intergval[m]) {
-		  h--;
-		}
-		if(h<j && tempscore-intergpen[m]<newexon[k]->score + Sites[INTERG][h].score[k]) {
-		  newexon[k]->prev=Sites[INTERG][h].prevex[k];
-		  tempscore=newexon[k]->score + Sites[INTERG][h].score[k];
-		}
-	      }
+    				  tempscore = newexon[k]->score + Sites[INTERG][j].score[k];
+    				  h=j;
+    				  if(intergval[m]) { // intergval gives the minimum distance where to look back for another gene; check to see if I can find better scoring parse at good distance
+    					  while(Sites[INTERG][h].prevex[k]!=NULL && newexon[k]->start-Sites[INTERG][h].prevex[k]->stop-1<= intergval[m]) { // if too close then go farther back
+    						  h--;
+    					  }
+    					  if(h<j && tempscore-intergpen[m]<newexon[k]->score + Sites[INTERG][h].score[k]) { // give some penalty for being too close
+    						  newexon[k]->prev=Sites[INTERG][h].prevex[k];
+    						  tempscore=newexon[k]->score + Sites[INTERG][h].score[k];
+    					  }
+    				  }
 
-	      //if(intergval[m] && newexon[k]->prev!=NULL && newexon[k]->start-newexon[k]->prev->stop-1<= intergval[m]) tempscore-=intergpen[m]; // short interg. penalty
+    				  //if(intergval[m] && newexon[k]->prev!=NULL && newexon[k]->start-newexon[k]->prev->stop-1<= intergval[m]) tempscore-=intergpen[m]; // short interg. penalty
 
 #ifdef MESSAGE
 	      if(!intergval[m]) h=j;
@@ -3338,13 +3227,13 @@ void DP(long int start, long int stop,int PREDNO,int force)
 	      printf("\n");
 #endif
 
-	      // introduce the heuristic here to allow for variation in prediction
-	      pos=insertmaxscore(tempscore,newexon[k],INTERG,i,changed[INTERG],PREDNO,INTERG,h,k);
-	      if(pos>k && Sites[INTERG][h].score[pos]==Sites[INTERG][h].score[k]) {
-		newexon[k]->prev=Sites[INTERG][h].prevex[pos];
-		Sites[INTERG][i].prevpredno[pos]=pos;
-	      }
-	    }
+	      	  	  	  // to what scoring site should be newexon[k] be linked
+	      	  	  	  pos=insertmaxscore(tempscore,newexon[k],INTERG,i,changed[INTERG],PREDNO,INTERG,h,k);
+	      	  	  	  if(pos>k && Sites[INTERG][h].score[pos]==Sites[INTERG][h].score[k]) {
+	      	  	  		  newexon[k]->prev=Sites[INTERG][h].prevex[pos];
+	      	  	  		  Sites[INTERG][i].prevpredno[pos]=pos;
+	      	  	  	  }
+    			  }
 
 	    /*}
 	      else {
@@ -3352,42 +3241,42 @@ void DP(long int start, long int stop,int PREDNO,int force)
 	      newexon[0]=NULL;
 	      }*/
 
-	  }
-	}
+    		  }
+    	  } // end single exon
 
-	if((!force && SS[j].type==0) || SS[j].type==3) { // (partial) terminal exon -- don't link to beginning of sequence if whole gene predictions are enforced (when force==1)
-	  for(m=0;m<MODEL_NO;m++) {
-	    newexon[0] = scoretermexon(j,i,&prevstate,&nextstate,1,m);
+    	  if((!force && SS[j].type==0) || SS[j].type==3) { // (partial) terminal exon -- don't link to beginning of sequence if whole gene predictions are enforced (when force==1)
+    		  for(m=0;m<MODEL_NO;m++) {
+    			  newexon[0] = scoretermexon(j,i,&prevstate,&nextstate,1,m);
 
-	    //if(newexon[0]->score>0) {
+    			  //if(newexon[0]->score>0) {
 
-	    for(k=1;k<PREDNO;k++)
-	      newexon[k]=copyexon(newexon[0]);
+    			  for(k=1;k<PREDNO;k++)
+    				  newexon[k]=copyexon(newexon[0]);
 
-	    for(k=0;k<PREDNO;k++) {
+    			  for(k=0;k<PREDNO;k++) {
 
-	      newexon[k]->prev=Sites[prevstate][j].prevex[k];
-	      if(newexon[k]->prev) {
-		newexon[k]->exon_no=addexon(newexon[k]->prev->exon_no);
-		lenin=1+newexon[k]->start-newexon[k]->prev->stop;
-		if(stopcodon(0,newexon[k]->lphase,newexon[k]->prev->stop,newexon[k]->start)) {
+    				  newexon[k]->prev=Sites[prevstate][j].prevex[k];
+    				  if(newexon[k]->prev) {
+    					  newexon[k]->exon_no=addexon(newexon[k]->prev->exon_no);
+    					  lenin=1+newexon[k]->start-newexon[k]->prev->stop;
+    					  if(stopcodon(0,newexon[k]->lphase,newexon[k]->prev->stop,newexon[k]->start)) {
 #ifdef MESSAGE
 		  printf("Free exon %x\n",newexon[k]);
 #endif
-		  free(newexon[k]);
-		  newexon[k]=NULL;
-		}
+		  	  	  	  	  	  free(newexon[k]);
+		  	  	  	  	  	  newexon[k]=NULL;
+    					  }
 
-	      }
-	      else {
-		lenin=newexon[k]->start-1;
-	      }
+    				  }
+    				  else {
+    					  lenin=newexon[k]->start-1;
+    				  }
 
-	      if(newexon[k]) {
+    				  if(newexon[k]) {
 
-		if(ok_gene_length(newexon[k],prevstate,j,k,1)) {
+    					  if(ok_gene_length(newexon[k],prevstate,j,k,1)) {
 		//if(1) {
-		  if(Use_Intron_Distrib[m])	newexon[k]->score+=(double)lenin*(LenDistr[m][4][3]-LenDistr[m][5][3]);
+    						  if(Use_Intron_Distrib[m])	newexon[k]->score+=(double)lenin*(LenDistr[m][4][3]-LenDistr[m][5][3]);
 
 
 #ifdef MESSAGE
@@ -3400,39 +3289,39 @@ void DP(long int start, long int stop,int PREDNO,int force)
 
 
 
-		  tempscore = newexon[k]->score + Sites[prevstate][j].score[k];
+		  	  	  	  	  	  tempscore = newexon[k]->score + Sites[prevstate][j].score[k];
 
-		  if(Use_Exon_Count) {
-		    //tempscore += log2(ExDistr[newexon->exon_no])-log2(ExTail[newexon->exon_no]);
-		    tempscore -= log2(ExTail[newexon[k]->exon_no]);
-		  }
+		  	  	  	  	  	  if(Use_Exon_Count) {
+		  	  	  	  	  		  //tempscore += log2(ExDistr[newexon->exon_no])-log2(ExTail[newexon->exon_no]);
+		  	  	  	  	  		  tempscore -= log2(ExTail[newexon[k]->exon_no]);
+		  	  	  	  	  	  }
 
-		  pos=insertmaxscore(tempscore,newexon[k],INTERG,i,changed[INTERG],PREDNO,prevstate,j,k);
-		  if(pos>k && Sites[prevstate][j].score[pos]==Sites[prevstate][j].score[k]) {
-		    newexon[k]->prev=Sites[prevstate][j].prevex[pos];
-		    Sites[INTERG][i].prevpredno[pos]=pos;
-		  }
-		}
-		else {
-		  free(newexon[k]); newexon[k]=NULL;
-		}
-	      }
-	    }
+		  	  	  	  	  	  pos=insertmaxscore(tempscore,newexon[k],INTERG,i,changed[INTERG],PREDNO,prevstate,j,k);
+		  	  	  	  	  	  if(pos>k && Sites[prevstate][j].score[pos]==Sites[prevstate][j].score[k]) {
+		  	  	  	  	  		  newexon[k]->prev=Sites[prevstate][j].prevex[pos];
+		  	  	  	  	  		  Sites[INTERG][i].prevpredno[pos]=pos;
+		  	  	  	  	  	  }
+    					  }
+    					  else {
+    						  free(newexon[k]); newexon[k]=NULL;
+    					  }
+    				  }
+    			  }
 	    /*}
 	      else {
 	      free(newexon[0]);
 	      newexon[0]=NULL;
 	      }*/
-	  }
-	}
+    		  }
+    	  } // end terminal exon
 
-	j--;
+    	  j--;
       }
 
-    }
+    } // end stop codon scoring above threshold
 
 
-    if(SS[i].type==4) {
+    if(SS[i].type==4) { // remember last stop in this frame (doesn't matter what score it has)
       laststop[(SS[i].poz-1)%3]=i;
     }
 
@@ -3440,36 +3329,36 @@ void DP(long int start, long int stop,int PREDNO,int force)
 
       // go back to score exons
       for(rphase=0;rphase<3;rphase++) {
-	j=i-1;
-	thisstop=laststop[(SS[i].poz-rphase-1)%3];
+    	  j=i-1;
+    	  thisstop=laststop[(SS[i].poz-rphase-1)%3];
 
-	while(j>=1 && j>=thisstop) {
+    	  while(j>=1 && j>=thisstop) {
 
-	  if(SS[j].type==1 && SS[j].poz<=SS[i].poz-3-rphase &&
-	     (SS[j].poz+2)%3 == (SS[i].poz-rphase-1)%3) { // (partial) initial exon to Irphase+
+    		  if(SS[j].type==1 && SS[j].poz<=SS[i].poz-3-rphase &&
+    				  (SS[j].poz+2)%3 == (SS[i].poz-rphase-1)%3) { // (partial) initial exon to Irphase+
 
-	    for(m=0;m<MODEL_NO;m++) {
-	      newexon[0] = scoreinitexon(j,i,&prevstate,&nextstate,1,m);
+    			  for(m=0;m<MODEL_NO;m++) {
+    				  newexon[0] = scoreinitexon(j,i,&prevstate,&nextstate,1,m);
 
-	      //if(newexon[0]->score>0) {
-	      for(k=1;k<PREDNO;k++)
-		newexon[k]=copyexon(newexon[0]);
+    				  //if(newexon[0]->score>0) {
+    				  for(k=1;k<PREDNO;k++)
+    					  newexon[k]=copyexon(newexon[0]);
 
-	      for(k=0;k<PREDNO;k++) {
+    				  for(k=0;k<PREDNO;k++) {
 
-		newexon[k]->prev=Sites[INTERG][j].prevex[k];
+    					  newexon[k]->prev=Sites[INTERG][j].prevex[k];
 
-		tempscore = newexon[k]->score + Sites[INTERG][j].score[k];
-		h=j;
-		if(intergval[m]) {
-		  while(Sites[INTERG][h].prevex[k]!=NULL && newexon[k]->start-Sites[INTERG][h].prevex[k]->stop-1<= intergval[m]) {
-		    h--;
-		  }
-		  if(h<j && tempscore-intergpen[m]<newexon[k]->score + Sites[INTERG][h].score[k]) {
-		    newexon[k]->prev=Sites[INTERG][h].prevex[k];
-		    tempscore=newexon[k]->score + Sites[INTERG][h].score[k];
-		  }
-		}
+    					  tempscore = newexon[k]->score + Sites[INTERG][j].score[k];
+    					  h=j;
+    					  if(intergval[m]) {
+    						  while(Sites[INTERG][h].prevex[k]!=NULL && newexon[k]->start-Sites[INTERG][h].prevex[k]->stop-1<= intergval[m]) {
+    							  h--;
+    						  }
+    						  if(h<j && tempscore-intergpen[m]<newexon[k]->score + Sites[INTERG][h].score[k]) {
+    							  newexon[k]->prev=Sites[INTERG][h].prevex[k];
+    							  tempscore=newexon[k]->score + Sites[INTERG][h].score[k];
+    						  }
+    					  }
 
 		//if(intergval[m] && newexon[k]->prev!=NULL && newexon[k]->start-newexon[k]->prev->stop-1<= intergval[m]) tempscore-=intergpen[m]; // short interg. penalty
 
@@ -3483,54 +3372,54 @@ void DP(long int start, long int stop,int PREDNO,int force)
 		printf("last stop : %ld\n",SS[thisstop].poz);
 #endif
 
-		if(Use_Exon_Count) { tempscore += log2(ExTail[2]);}
+						if(Use_Exon_Count) { tempscore += log2(ExTail[2]);}
 
-		pos=insertmaxscore(tempscore,newexon[k],nextstate,i,changed[nextstate],PREDNO,INTERG,h,k);
-		if(pos>k && Sites[INTERG][h].score[pos]==Sites[INTERG][h].score[k]) {
-		  newexon[k]->prev=Sites[INTERG][h].prevex[pos];
-		  Sites[nextstate][i].prevpredno[pos]=pos;
-		}
+						pos=insertmaxscore(tempscore,newexon[k],nextstate,i,changed[nextstate],PREDNO,INTERG,h,k);
+						if(pos>k && Sites[INTERG][h].score[pos]==Sites[INTERG][h].score[k]) {
+							newexon[k]->prev=Sites[INTERG][h].prevex[pos];
+							Sites[nextstate][i].prevpredno[pos]=pos;
+						}
 
-	      }
+    				  }
 	      /*}
 		else {
 		free(newexon[0]);
 		newexon[0]=NULL;
 		}*/
-	    }
-	  }
+    			  }
+    		  }
 
-	  if((!force && SS[j].type==0) || (SS[j].type==3 && SS[j].poz+2<SS[i].poz-rphase-1)) { // (partial) internal exon
+    		  if((!force && SS[j].type==0) || (SS[j].type==3 && SS[j].poz+2<SS[i].poz-rphase-1)) { // (partial) internal exon
 
-	    for(m=0;m<MODEL_NO;m++) {
-	      newexon[0] = scoreinternexon(j,i,rphase,&prevstate,&nextstate,1,m);
+    			  for(m=0;m<MODEL_NO;m++) {
+    				  newexon[0] = scoreinternexon(j,i,rphase,&prevstate,&nextstate,1,m);
 
 	      //if(newexon[0]->score>0) {
-	      for(k=1;k<PREDNO;k++)
-		newexon[k]=copyexon(newexon[0]);
+    				  for(k=1;k<PREDNO;k++)
+    					  newexon[k]=copyexon(newexon[0]);
 
-	      for(k=0;k<PREDNO;k++) {
+    				  for(k=0;k<PREDNO;k++) {
 
-		newexon[k]->prev=Sites[prevstate][j].prevex[k];
+    					  newexon[k]->prev=Sites[prevstate][j].prevex[k];
 
-		if(newexon[k]->prev) {
-		  newexon[k]->exon_no=addexon(newexon[k]->prev->exon_no);
-		  lenin=1+newexon[k]->start-newexon[k]->prev->stop;
-		  if(stopcodon(0,newexon[k]->lphase,newexon[k]->prev->stop,newexon[k]->start)){
+    					  if(newexon[k]->prev) {
+    						  newexon[k]->exon_no=addexon(newexon[k]->prev->exon_no);
+    						  lenin=1+newexon[k]->start-newexon[k]->prev->stop;
+    						  if(stopcodon(0,newexon[k]->lphase,newexon[k]->prev->stop,newexon[k]->start)){
 #ifdef MESSAGE
 		  printf("Free exon %x\n",newexon[k]);
 #endif
-		    free(newexon[k]);
-		    newexon[k]=NULL;
-		  }
-		}
-		else {
-		  lenin=newexon[k]->start-1;
-		}
+		    					free(newexon[k]);
+		    					newexon[k]=NULL;
+    						  }
+    					  }
+    					  else {
+    						  lenin=newexon[k]->start-1;
+    					  }
 
-		if(newexon[k]) {
+    					  if(newexon[k]) {
 
-		  if(Use_Intron_Distrib[m]) newexon[k]->score+=(double)lenin*(LenDistr[m][4][3]-LenDistr[m][5][3]);
+    						  if(Use_Intron_Distrib[m]) newexon[k]->score+=(double)lenin*(LenDistr[m][4][3]-LenDistr[m][5][3]);
 
 
 #ifdef MESSAGE
@@ -3541,50 +3430,50 @@ void DP(long int start, long int stop,int PREDNO,int force)
 		  printf("\n");
 #endif
 
-		  tempscore=newexon[k]->score+Sites[prevstate][j].score[k];
+		  	  	  	  	  	  tempscore=newexon[k]->score+Sites[prevstate][j].score[k];
 
-		  if(Use_Exon_Count) {
-		    tempscore += log2(ExTail[newexon[k]->exon_no+1])-log2(ExTail[newexon[k]->exon_no]);
-		  }
+		  	  	  	  	  	  if(Use_Exon_Count) {
+		  	  	  	  	  		  tempscore += log2(ExTail[newexon[k]->exon_no+1])-log2(ExTail[newexon[k]->exon_no]);
+		  	  	  	  	  	  }
 
-		  if(partial[m]) {
-		    pos=insertmaxscore(tempscore,newexon[k],nextstate,i,changed[nextstate],PREDNO,prevstate,j,k); // here I allow partial genes in the beginning
-		    if(pos>k && Sites[prevstate][j].score[pos]==Sites[prevstate][j].score[k]) {
-		      newexon[k]->prev=Sites[prevstate][j].prevex[pos];
-		      Sites[nextstate][i].prevpredno[pos]=pos;
-		    }
-		  }
-		  else
-		    if(newexon[k]->prev!=NULL) {
-		      pos=insertmaxscore(tempscore,newexon[k],nextstate,i,changed[nextstate],PREDNO,prevstate,j,k);
-		      if(pos>k && Sites[prevstate][j].score[pos]==Sites[prevstate][j].score[k]) {
-			newexon[k]->prev=Sites[prevstate][j].prevex[pos];
-			Sites[nextstate][i].prevpredno[pos]=pos;
-		      }
-		    }
-		    else {
+		  	  	  	  	  	  if(partial[m]) {
+		  	  	  	  	  		  pos=insertmaxscore(tempscore,newexon[k],nextstate,i,changed[nextstate],PREDNO,prevstate,j,k); // here I allow partial genes in the beginning
+		  	  	  	  	  		  if(pos>k && Sites[prevstate][j].score[pos]==Sites[prevstate][j].score[k]) {
+		  	  	  	  	  			  newexon[k]->prev=Sites[prevstate][j].prevex[pos];
+		  	  	  	  	  			  Sites[nextstate][i].prevpredno[pos]=pos;
+		  	  	  	  	  		  }
+		  	  	  	  	  	  }
+		  	  	  	  	  	  else
+		  	  	  	  	  		  if(newexon[k]->prev!=NULL) {
+		  	  	  	  	  			  pos=insertmaxscore(tempscore,newexon[k],nextstate,i,changed[nextstate],PREDNO,prevstate,j,k);
+		  	  	  	  	  			  if(pos>k && Sites[prevstate][j].score[pos]==Sites[prevstate][j].score[k]) {
+		  	  	  	  	  				  newexon[k]->prev=Sites[prevstate][j].prevex[pos];
+		  	  	  	  	  				  Sites[nextstate][i].prevpredno[pos]=pos;
+		  	  	  	  	  			  }
+		  	  	  	  	  		  }
+		  	  	  	  	  		  else {
 #ifdef MESSAGE
 		  printf("Free exon %x\n",newexon[k]);
 #endif
-		      free(newexon[k]);
-		      newexon[k]=NULL;
-		    }
+		  	  	  	  	  	  	  	  free(newexon[k]);
+		  	  	  	  	  	  	  	  newexon[k]=NULL;
+		  	  	  	  	  		  }
 
-		}
-	      }
+    					  }
+    				  }
 	      /*}
 		else {
 		free(newexon[0]);
 		newexon[0]=NULL;
 		} */
-	    }
-	  }
+    			  }
+    		  }
 
-	  j--;
-	}
+    		  j--;
+    	  }
 
       }
-    }
+    } // end donor
 
     // reverse strand
 
@@ -3907,7 +3796,7 @@ void  Read_Coding_Model  (char * Param,int m)
 
   fp = File_Open (Param, "r");   // maybe rb ?
 
-  Read_Scoring_Model (fp,m);
+  Read_Scoring_Model (fp,m); // reads 3 ICMs training parameters (one for each codon position)
 
   fclose (fp);
 
@@ -4379,7 +4268,7 @@ void initparam( double *mintron, double *minterg, double *m5utr, double *m3utr) 
   // Acc_Thr,Don_thr,Atg_Thr,Stop_Thr,i5utr,i3utr,iinterg,iintron,iin[i],Use_Exon_Count,Use_protein,
   // SIGNALP_FILE,EXONNO_DISTR,ExNo
 
-  for(i=0;i<MODEL_NO;i++) {
+  for(i=0;i<MODEL_NO;i++) { // for each model sets initial values for the parameters; by default MODEL_NO=1
     strcpy(CODING_FILE[i],"");
     strcpy(PROTEIN_FILE[i],"");
     strcpy(NONCODING_FILE[i],"");
