@@ -5,9 +5,6 @@
 
 #include "misc.h"
 
-static const char *cr = "copywrite (c) Doug Harmon 1997";
-
-
 /* check_calloc() allocates space for an array of num_elem
  * elements  of size elem_size. The space is initialized to zeros.
  */
