@@ -11,7 +11,7 @@ LIBS := -lm
 ifneq (,$(filter %release, $(MAKECMDGOALS)))
   CXXFLAGS := -O3 -g -DNDEBUG $(CXXFLAGS)
 else # debug build
-  CXXFLAGS += -g -O0 -D_DEBUG -DGDEBUG
+  CXXFLAGS += -g -O0 -DDEBUG -DGDEBUG
 endif
 
 %.o : %.cpp
