@@ -2,7 +2,7 @@
 
 Train GlimmerHMM module.
 
-To use this trainning module, first run make in this directory, and than call
+To use this training module, first run make in this directory, and than call
 trainGlimmerHMM with the parameters specified below.
 
   Usage:
@@ -49,6 +49,6 @@ where you ran the traininning procedure from. This directory will be called
 TrainGlimmM[data][time] where [data] and [time] specify the data and the 
 time when the directory was created. This directory contains the training 
 parameters needed by GlimmerHMM to run. A log file named after the name of 
-the diretory will be also created specifying some of the default 
+the directory will be also created specifying some of the default 
 parameters set for GlimmerHMM.
 
